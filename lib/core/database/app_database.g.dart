@@ -91,6 +91,18 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _playerColorIndexMeta = const VerificationMeta(
+    'playerColorIndex',
+  );
+  @override
+  late final GeneratedColumn<int> playerColorIndex = GeneratedColumn<int>(
+    'player_color_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -101,6 +113,7 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
     timeControlSeconds,
     playedAt,
     playerAccuracy,
+    playerColorIndex,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -173,6 +186,15 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
         ),
       );
     }
+    if (data.containsKey('player_color_index')) {
+      context.handle(
+        _playerColorIndexMeta,
+        playerColorIndex.isAcceptableOrUnknown(
+          data['player_color_index']!,
+          _playerColorIndexMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -214,6 +236,10 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
         DriftSqlType.int,
         data['${effectivePrefix}player_accuracy'],
       ),
+      playerColorIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}player_color_index'],
+      )!,
     );
   }
 
@@ -232,6 +258,7 @@ class Game extends DataClass implements Insertable<Game> {
   final int? timeControlSeconds;
   final DateTime playedAt;
   final int? playerAccuracy;
+  final int playerColorIndex;
   const Game({
     required this.id,
     required this.pgn,
@@ -241,6 +268,7 @@ class Game extends DataClass implements Insertable<Game> {
     this.timeControlSeconds,
     required this.playedAt,
     this.playerAccuracy,
+    required this.playerColorIndex,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -259,6 +287,7 @@ class Game extends DataClass implements Insertable<Game> {
     if (!nullToAbsent || playerAccuracy != null) {
       map['player_accuracy'] = Variable<int>(playerAccuracy);
     }
+    map['player_color_index'] = Variable<int>(playerColorIndex);
     return map;
   }
 
@@ -278,6 +307,7 @@ class Game extends DataClass implements Insertable<Game> {
       playerAccuracy: playerAccuracy == null && nullToAbsent
           ? const Value.absent()
           : Value(playerAccuracy),
+      playerColorIndex: Value(playerColorIndex),
     );
   }
 
@@ -295,6 +325,7 @@ class Game extends DataClass implements Insertable<Game> {
       timeControlSeconds: serializer.fromJson<int?>(json['timeControlSeconds']),
       playedAt: serializer.fromJson<DateTime>(json['playedAt']),
       playerAccuracy: serializer.fromJson<int?>(json['playerAccuracy']),
+      playerColorIndex: serializer.fromJson<int>(json['playerColorIndex']),
     );
   }
   @override
@@ -309,6 +340,7 @@ class Game extends DataClass implements Insertable<Game> {
       'timeControlSeconds': serializer.toJson<int?>(timeControlSeconds),
       'playedAt': serializer.toJson<DateTime>(playedAt),
       'playerAccuracy': serializer.toJson<int?>(playerAccuracy),
+      'playerColorIndex': serializer.toJson<int>(playerColorIndex),
     };
   }
 
@@ -321,6 +353,7 @@ class Game extends DataClass implements Insertable<Game> {
     Value<int?> timeControlSeconds = const Value.absent(),
     DateTime? playedAt,
     Value<int?> playerAccuracy = const Value.absent(),
+    int? playerColorIndex,
   }) => Game(
     id: id ?? this.id,
     pgn: pgn ?? this.pgn,
@@ -334,6 +367,7 @@ class Game extends DataClass implements Insertable<Game> {
     playerAccuracy: playerAccuracy.present
         ? playerAccuracy.value
         : this.playerAccuracy,
+    playerColorIndex: playerColorIndex ?? this.playerColorIndex,
   );
   Game copyWithCompanion(GamesCompanion data) {
     return Game(
@@ -349,6 +383,9 @@ class Game extends DataClass implements Insertable<Game> {
       playerAccuracy: data.playerAccuracy.present
           ? data.playerAccuracy.value
           : this.playerAccuracy,
+      playerColorIndex: data.playerColorIndex.present
+          ? data.playerColorIndex.value
+          : this.playerColorIndex,
     );
   }
 
@@ -362,7 +399,8 @@ class Game extends DataClass implements Insertable<Game> {
           ..write('botLevel: $botLevel, ')
           ..write('timeControlSeconds: $timeControlSeconds, ')
           ..write('playedAt: $playedAt, ')
-          ..write('playerAccuracy: $playerAccuracy')
+          ..write('playerAccuracy: $playerAccuracy, ')
+          ..write('playerColorIndex: $playerColorIndex')
           ..write(')'))
         .toString();
   }
@@ -377,6 +415,7 @@ class Game extends DataClass implements Insertable<Game> {
     timeControlSeconds,
     playedAt,
     playerAccuracy,
+    playerColorIndex,
   );
   @override
   bool operator ==(Object other) =>
@@ -389,7 +428,8 @@ class Game extends DataClass implements Insertable<Game> {
           other.botLevel == this.botLevel &&
           other.timeControlSeconds == this.timeControlSeconds &&
           other.playedAt == this.playedAt &&
-          other.playerAccuracy == this.playerAccuracy);
+          other.playerAccuracy == this.playerAccuracy &&
+          other.playerColorIndex == this.playerColorIndex);
 }
 
 class GamesCompanion extends UpdateCompanion<Game> {
@@ -401,6 +441,7 @@ class GamesCompanion extends UpdateCompanion<Game> {
   final Value<int?> timeControlSeconds;
   final Value<DateTime> playedAt;
   final Value<int?> playerAccuracy;
+  final Value<int> playerColorIndex;
   const GamesCompanion({
     this.id = const Value.absent(),
     this.pgn = const Value.absent(),
@@ -410,6 +451,7 @@ class GamesCompanion extends UpdateCompanion<Game> {
     this.timeControlSeconds = const Value.absent(),
     this.playedAt = const Value.absent(),
     this.playerAccuracy = const Value.absent(),
+    this.playerColorIndex = const Value.absent(),
   });
   GamesCompanion.insert({
     this.id = const Value.absent(),
@@ -420,6 +462,7 @@ class GamesCompanion extends UpdateCompanion<Game> {
     this.timeControlSeconds = const Value.absent(),
     required DateTime playedAt,
     this.playerAccuracy = const Value.absent(),
+    this.playerColorIndex = const Value.absent(),
   }) : pgn = Value(pgn),
        result = Value(result),
        mode = Value(mode),
@@ -433,6 +476,7 @@ class GamesCompanion extends UpdateCompanion<Game> {
     Expression<int>? timeControlSeconds,
     Expression<DateTime>? playedAt,
     Expression<int>? playerAccuracy,
+    Expression<int>? playerColorIndex,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -444,6 +488,7 @@ class GamesCompanion extends UpdateCompanion<Game> {
         'time_control_seconds': timeControlSeconds,
       if (playedAt != null) 'played_at': playedAt,
       if (playerAccuracy != null) 'player_accuracy': playerAccuracy,
+      if (playerColorIndex != null) 'player_color_index': playerColorIndex,
     });
   }
 
@@ -456,6 +501,7 @@ class GamesCompanion extends UpdateCompanion<Game> {
     Value<int?>? timeControlSeconds,
     Value<DateTime>? playedAt,
     Value<int?>? playerAccuracy,
+    Value<int>? playerColorIndex,
   }) {
     return GamesCompanion(
       id: id ?? this.id,
@@ -466,6 +512,7 @@ class GamesCompanion extends UpdateCompanion<Game> {
       timeControlSeconds: timeControlSeconds ?? this.timeControlSeconds,
       playedAt: playedAt ?? this.playedAt,
       playerAccuracy: playerAccuracy ?? this.playerAccuracy,
+      playerColorIndex: playerColorIndex ?? this.playerColorIndex,
     );
   }
 
@@ -496,6 +543,9 @@ class GamesCompanion extends UpdateCompanion<Game> {
     if (playerAccuracy.present) {
       map['player_accuracy'] = Variable<int>(playerAccuracy.value);
     }
+    if (playerColorIndex.present) {
+      map['player_color_index'] = Variable<int>(playerColorIndex.value);
+    }
     return map;
   }
 
@@ -509,7 +559,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
           ..write('botLevel: $botLevel, ')
           ..write('timeControlSeconds: $timeControlSeconds, ')
           ..write('playedAt: $playedAt, ')
-          ..write('playerAccuracy: $playerAccuracy')
+          ..write('playerAccuracy: $playerAccuracy, ')
+          ..write('playerColorIndex: $playerColorIndex')
           ..write(')'))
         .toString();
   }
@@ -594,6 +645,17 @@ class $MovesTable extends Moves with TableInfo<$MovesTable, Move> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _bestMoveUciMeta = const VerificationMeta(
+    'bestMoveUci',
+  );
+  @override
+  late final GeneratedColumn<String> bestMoveUci = GeneratedColumn<String>(
+    'best_move_uci',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -603,6 +665,7 @@ class $MovesTable extends Moves with TableInfo<$MovesTable, Move> {
     san,
     evalCentipawns,
     classification,
+    bestMoveUci,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -669,6 +732,15 @@ class $MovesTable extends Moves with TableInfo<$MovesTable, Move> {
         ),
       );
     }
+    if (data.containsKey('best_move_uci')) {
+      context.handle(
+        _bestMoveUciMeta,
+        bestMoveUci.isAcceptableOrUnknown(
+          data['best_move_uci']!,
+          _bestMoveUciMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -706,6 +778,10 @@ class $MovesTable extends Moves with TableInfo<$MovesTable, Move> {
         DriftSqlType.string,
         data['${effectivePrefix}classification'],
       ),
+      bestMoveUci: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}best_move_uci'],
+      ),
     );
   }
 
@@ -723,6 +799,7 @@ class Move extends DataClass implements Insertable<Move> {
   final String san;
   final int? evalCentipawns;
   final String? classification;
+  final String? bestMoveUci;
   const Move({
     required this.id,
     required this.gameId,
@@ -731,6 +808,7 @@ class Move extends DataClass implements Insertable<Move> {
     required this.san,
     this.evalCentipawns,
     this.classification,
+    this.bestMoveUci,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -745,6 +823,9 @@ class Move extends DataClass implements Insertable<Move> {
     }
     if (!nullToAbsent || classification != null) {
       map['classification'] = Variable<String>(classification);
+    }
+    if (!nullToAbsent || bestMoveUci != null) {
+      map['best_move_uci'] = Variable<String>(bestMoveUci);
     }
     return map;
   }
@@ -762,6 +843,9 @@ class Move extends DataClass implements Insertable<Move> {
       classification: classification == null && nullToAbsent
           ? const Value.absent()
           : Value(classification),
+      bestMoveUci: bestMoveUci == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bestMoveUci),
     );
   }
 
@@ -778,6 +862,7 @@ class Move extends DataClass implements Insertable<Move> {
       san: serializer.fromJson<String>(json['san']),
       evalCentipawns: serializer.fromJson<int?>(json['evalCentipawns']),
       classification: serializer.fromJson<String?>(json['classification']),
+      bestMoveUci: serializer.fromJson<String?>(json['bestMoveUci']),
     );
   }
   @override
@@ -791,6 +876,7 @@ class Move extends DataClass implements Insertable<Move> {
       'san': serializer.toJson<String>(san),
       'evalCentipawns': serializer.toJson<int?>(evalCentipawns),
       'classification': serializer.toJson<String?>(classification),
+      'bestMoveUci': serializer.toJson<String?>(bestMoveUci),
     };
   }
 
@@ -802,6 +888,7 @@ class Move extends DataClass implements Insertable<Move> {
     String? san,
     Value<int?> evalCentipawns = const Value.absent(),
     Value<String?> classification = const Value.absent(),
+    Value<String?> bestMoveUci = const Value.absent(),
   }) => Move(
     id: id ?? this.id,
     gameId: gameId ?? this.gameId,
@@ -814,6 +901,7 @@ class Move extends DataClass implements Insertable<Move> {
     classification: classification.present
         ? classification.value
         : this.classification,
+    bestMoveUci: bestMoveUci.present ? bestMoveUci.value : this.bestMoveUci,
   );
   Move copyWithCompanion(MovesCompanion data) {
     return Move(
@@ -828,6 +916,9 @@ class Move extends DataClass implements Insertable<Move> {
       classification: data.classification.present
           ? data.classification.value
           : this.classification,
+      bestMoveUci: data.bestMoveUci.present
+          ? data.bestMoveUci.value
+          : this.bestMoveUci,
     );
   }
 
@@ -840,14 +931,23 @@ class Move extends DataClass implements Insertable<Move> {
           ..write('uci: $uci, ')
           ..write('san: $san, ')
           ..write('evalCentipawns: $evalCentipawns, ')
-          ..write('classification: $classification')
+          ..write('classification: $classification, ')
+          ..write('bestMoveUci: $bestMoveUci')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, gameId, ply, uci, san, evalCentipawns, classification);
+  int get hashCode => Object.hash(
+    id,
+    gameId,
+    ply,
+    uci,
+    san,
+    evalCentipawns,
+    classification,
+    bestMoveUci,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -858,7 +958,8 @@ class Move extends DataClass implements Insertable<Move> {
           other.uci == this.uci &&
           other.san == this.san &&
           other.evalCentipawns == this.evalCentipawns &&
-          other.classification == this.classification);
+          other.classification == this.classification &&
+          other.bestMoveUci == this.bestMoveUci);
 }
 
 class MovesCompanion extends UpdateCompanion<Move> {
@@ -869,6 +970,7 @@ class MovesCompanion extends UpdateCompanion<Move> {
   final Value<String> san;
   final Value<int?> evalCentipawns;
   final Value<String?> classification;
+  final Value<String?> bestMoveUci;
   const MovesCompanion({
     this.id = const Value.absent(),
     this.gameId = const Value.absent(),
@@ -877,6 +979,7 @@ class MovesCompanion extends UpdateCompanion<Move> {
     this.san = const Value.absent(),
     this.evalCentipawns = const Value.absent(),
     this.classification = const Value.absent(),
+    this.bestMoveUci = const Value.absent(),
   });
   MovesCompanion.insert({
     this.id = const Value.absent(),
@@ -886,6 +989,7 @@ class MovesCompanion extends UpdateCompanion<Move> {
     required String san,
     this.evalCentipawns = const Value.absent(),
     this.classification = const Value.absent(),
+    this.bestMoveUci = const Value.absent(),
   }) : gameId = Value(gameId),
        ply = Value(ply),
        uci = Value(uci),
@@ -898,6 +1002,7 @@ class MovesCompanion extends UpdateCompanion<Move> {
     Expression<String>? san,
     Expression<int>? evalCentipawns,
     Expression<String>? classification,
+    Expression<String>? bestMoveUci,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -907,6 +1012,7 @@ class MovesCompanion extends UpdateCompanion<Move> {
       if (san != null) 'san': san,
       if (evalCentipawns != null) 'eval_centipawns': evalCentipawns,
       if (classification != null) 'classification': classification,
+      if (bestMoveUci != null) 'best_move_uci': bestMoveUci,
     });
   }
 
@@ -918,6 +1024,7 @@ class MovesCompanion extends UpdateCompanion<Move> {
     Value<String>? san,
     Value<int?>? evalCentipawns,
     Value<String?>? classification,
+    Value<String?>? bestMoveUci,
   }) {
     return MovesCompanion(
       id: id ?? this.id,
@@ -927,6 +1034,7 @@ class MovesCompanion extends UpdateCompanion<Move> {
       san: san ?? this.san,
       evalCentipawns: evalCentipawns ?? this.evalCentipawns,
       classification: classification ?? this.classification,
+      bestMoveUci: bestMoveUci ?? this.bestMoveUci,
     );
   }
 
@@ -954,6 +1062,9 @@ class MovesCompanion extends UpdateCompanion<Move> {
     if (classification.present) {
       map['classification'] = Variable<String>(classification.value);
     }
+    if (bestMoveUci.present) {
+      map['best_move_uci'] = Variable<String>(bestMoveUci.value);
+    }
     return map;
   }
 
@@ -966,7 +1077,8 @@ class MovesCompanion extends UpdateCompanion<Move> {
           ..write('uci: $uci, ')
           ..write('san: $san, ')
           ..write('evalCentipawns: $evalCentipawns, ')
-          ..write('classification: $classification')
+          ..write('classification: $classification, ')
+          ..write('bestMoveUci: $bestMoveUci')
           ..write(')'))
         .toString();
   }
@@ -1587,6 +1699,7 @@ typedef $$GamesTableCreateCompanionBuilder =
       Value<int?> timeControlSeconds,
       required DateTime playedAt,
       Value<int?> playerAccuracy,
+      Value<int> playerColorIndex,
     });
 typedef $$GamesTableUpdateCompanionBuilder =
     GamesCompanion Function({
@@ -1598,6 +1711,7 @@ typedef $$GamesTableUpdateCompanionBuilder =
       Value<int?> timeControlSeconds,
       Value<DateTime> playedAt,
       Value<int?> playerAccuracy,
+      Value<int> playerColorIndex,
     });
 
 final class $$GamesTableReferences
@@ -1669,6 +1783,11 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
 
   ColumnFilters<int> get playerAccuracy => $composableBuilder(
     column: $table.playerAccuracy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get playerColorIndex => $composableBuilder(
+    column: $table.playerColorIndex,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1746,6 +1865,11 @@ class $$GamesTableOrderingComposer
     column: $table.playerAccuracy,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get playerColorIndex => $composableBuilder(
+    column: $table.playerColorIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$GamesTableAnnotationComposer
@@ -1782,6 +1906,11 @@ class $$GamesTableAnnotationComposer
 
   GeneratedColumn<int> get playerAccuracy => $composableBuilder(
     column: $table.playerAccuracy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get playerColorIndex => $composableBuilder(
+    column: $table.playerColorIndex,
     builder: (column) => column,
   );
 
@@ -1847,6 +1976,7 @@ class $$GamesTableTableManager
                 Value<int?> timeControlSeconds = const Value.absent(),
                 Value<DateTime> playedAt = const Value.absent(),
                 Value<int?> playerAccuracy = const Value.absent(),
+                Value<int> playerColorIndex = const Value.absent(),
               }) => GamesCompanion(
                 id: id,
                 pgn: pgn,
@@ -1856,6 +1986,7 @@ class $$GamesTableTableManager
                 timeControlSeconds: timeControlSeconds,
                 playedAt: playedAt,
                 playerAccuracy: playerAccuracy,
+                playerColorIndex: playerColorIndex,
               ),
           createCompanionCallback:
               ({
@@ -1867,6 +1998,7 @@ class $$GamesTableTableManager
                 Value<int?> timeControlSeconds = const Value.absent(),
                 required DateTime playedAt,
                 Value<int?> playerAccuracy = const Value.absent(),
+                Value<int> playerColorIndex = const Value.absent(),
               }) => GamesCompanion.insert(
                 id: id,
                 pgn: pgn,
@@ -1876,6 +2008,7 @@ class $$GamesTableTableManager
                 timeControlSeconds: timeControlSeconds,
                 playedAt: playedAt,
                 playerAccuracy: playerAccuracy,
+                playerColorIndex: playerColorIndex,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -1933,6 +2066,7 @@ typedef $$MovesTableCreateCompanionBuilder =
       required String san,
       Value<int?> evalCentipawns,
       Value<String?> classification,
+      Value<String?> bestMoveUci,
     });
 typedef $$MovesTableUpdateCompanionBuilder =
     MovesCompanion Function({
@@ -1943,6 +2077,7 @@ typedef $$MovesTableUpdateCompanionBuilder =
       Value<String> san,
       Value<int?> evalCentipawns,
       Value<String?> classification,
+      Value<String?> bestMoveUci,
     });
 
 final class $$MovesTableReferences
@@ -2002,6 +2137,11 @@ class $$MovesTableFilterComposer extends Composer<_$AppDatabase, $MovesTable> {
 
   ColumnFilters<String> get classification => $composableBuilder(
     column: $table.classification,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bestMoveUci => $composableBuilder(
+    column: $table.bestMoveUci,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2068,6 +2208,11 @@ class $$MovesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get bestMoveUci => $composableBuilder(
+    column: $table.bestMoveUci,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$GamesTableOrderingComposer get gameId {
     final $$GamesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2120,6 +2265,11 @@ class $$MovesTableAnnotationComposer
 
   GeneratedColumn<String> get classification => $composableBuilder(
     column: $table.classification,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get bestMoveUci => $composableBuilder(
+    column: $table.bestMoveUci,
     builder: (column) => column,
   );
 
@@ -2182,6 +2332,7 @@ class $$MovesTableTableManager
                 Value<String> san = const Value.absent(),
                 Value<int?> evalCentipawns = const Value.absent(),
                 Value<String?> classification = const Value.absent(),
+                Value<String?> bestMoveUci = const Value.absent(),
               }) => MovesCompanion(
                 id: id,
                 gameId: gameId,
@@ -2190,6 +2341,7 @@ class $$MovesTableTableManager
                 san: san,
                 evalCentipawns: evalCentipawns,
                 classification: classification,
+                bestMoveUci: bestMoveUci,
               ),
           createCompanionCallback:
               ({
@@ -2200,6 +2352,7 @@ class $$MovesTableTableManager
                 required String san,
                 Value<int?> evalCentipawns = const Value.absent(),
                 Value<String?> classification = const Value.absent(),
+                Value<String?> bestMoveUci = const Value.absent(),
               }) => MovesCompanion.insert(
                 id: id,
                 gameId: gameId,
@@ -2208,6 +2361,7 @@ class $$MovesTableTableManager
                 san: san,
                 evalCentipawns: evalCentipawns,
                 classification: classification,
+                bestMoveUci: bestMoveUci,
               ),
           withReferenceMapper: (p0) => p0
               .map(

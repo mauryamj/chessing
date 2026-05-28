@@ -8,6 +8,7 @@ import '../setup/game_setup_provider.dart';
 import 'widgets/clock_widget.dart';
 import 'widgets/captured_pieces_bar.dart';
 import 'widgets/material_diff_bar.dart';
+import 'widgets/legal_moves_overlay.dart';
 import '../../../app/theme.dart';
 
 class BoardScreen extends ConsumerWidget {
@@ -131,15 +132,15 @@ class BoardScreen extends ConsumerWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: botClockActive
-                            ? BorderSide(color: theme.colorScheme.primary.withOpacity(0.5), width: 1)
-                            : BorderSide(color: theme.dividerColor.withOpacity(0.1), width: 1),
+                            ? BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1)
+                            : BorderSide(color: theme.dividerColor.withValues(alpha: 0.1), width: 1),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
                               child: Icon(Icons.computer, color: theme.colorScheme.primary),
                             ),
                             const SizedBox(width: 12),
@@ -155,18 +156,21 @@ class BoardScreen extends ConsumerWidget {
                                     'Difficulty Level ${gameConfig.botLevel}',
                                     style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
                                   ),
-                                  Row(
-                                    children: [
-                                      CapturedPiecesBar(
-                                        boardSymbols: boardState.squaresState.board.board,
-                                        forWhite: !isPlayerWhite,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      MaterialDiffBar(
-                                        boardSymbols: boardState.squaresState.board.board,
-                                        forWhite: !isPlayerWhite,
-                                      ),
-                                    ],
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        CapturedPiecesBar(
+                                          boardSymbols: boardState.squaresState.board.board,
+                                          forWhite: !isPlayerWhite,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        MaterialDiffBar(
+                                          boardSymbols: boardState.squaresState.board.board,
+                                          forWhite: !isPlayerWhite,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -188,7 +192,7 @@ class BoardScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -203,6 +207,7 @@ class BoardScreen extends ConsumerWidget {
                           theme: _getBoardTheme(context),
                           size: boardState.squaresState.size,
                           moves: boardState.squaresState.moves,
+                          markerTheme: legalMovesMarkerTheme,
                           onMove: (move) => notifier.makeMove(move),
                           draggable: boardState.status == GameStatus.playing,
                           overlays: [
@@ -219,7 +224,7 @@ class BoardScreen extends ConsumerWidget {
                                           width: squareSize * 0.35,
                                           height: squareSize * 0.35,
                                           decoration: BoxDecoration(
-                                            color: Colors.red.withOpacity(0.35),
+                                            color: Colors.red.withValues(alpha: 0.35),
                                             shape: BoxShape.circle,
                                             border: Border.all(
                                               color: Colors.red,
@@ -244,15 +249,15 @@ class BoardScreen extends ConsumerWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: playerClockActive
-                            ? BorderSide(color: theme.colorScheme.primary.withOpacity(0.5), width: 1)
-                            : BorderSide(color: theme.dividerColor.withOpacity(0.1), width: 1),
+                            ? BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1)
+                            : BorderSide(color: theme.dividerColor.withValues(alpha: 0.1), width: 1),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
                               child: Icon(Icons.person, color: theme.colorScheme.primary),
                             ),
                             const SizedBox(width: 12),
@@ -268,18 +273,21 @@ class BoardScreen extends ConsumerWidget {
                                     isPlayerWhite ? 'Playing as White' : 'Playing as Black',
                                     style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
                                   ),
-                                  Row(
-                                    children: [
-                                      CapturedPiecesBar(
-                                        boardSymbols: boardState.squaresState.board.board,
-                                        forWhite: isPlayerWhite,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      MaterialDiffBar(
-                                        boardSymbols: boardState.squaresState.board.board,
-                                        forWhite: isPlayerWhite,
-                                      ),
-                                    ],
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        CapturedPiecesBar(
+                                          boardSymbols: boardState.squaresState.board.board,
+                                          forWhite: isPlayerWhite,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        MaterialDiffBar(
+                                          boardSymbols: boardState.squaresState.board.board,
+                                          forWhite: isPlayerWhite,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -322,7 +330,7 @@ class BoardScreen extends ConsumerWidget {
                     style: ElevatedButton.styleFrom(
                       elevation: 1,
                       backgroundColor: boardState.threatOverlayEnabled
-                          ? Colors.red.withOpacity(0.08)
+                          ? Colors.red.withValues(alpha: 0.08)
                           : theme.cardTheme.color,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -394,7 +402,7 @@ class BoardScreen extends ConsumerWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),

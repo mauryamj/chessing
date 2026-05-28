@@ -9,4 +9,5 @@ class Games extends Table {
   IntColumn get timeControlSeconds => integer().nullable()();
   DateTimeColumn get playedAt => dateTime()();
   IntColumn get playerAccuracy => integer().nullable()();
+  IntColumn get playerColorIndex => integer().withDefault(const Constant(0))(); // 0 for White, 1 for Black
 }

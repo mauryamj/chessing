@@ -9,4 +9,5 @@ class Moves extends Table {
   TextColumn get san => text()();
   IntColumn get evalCentipawns => integer().nullable()();
   TextColumn get classification => text().nullable()(); // 'best'|'good'|'inaccuracy'|'mistake'|'blunder'
+  TextColumn get bestMoveUci => text().nullable()();
 }

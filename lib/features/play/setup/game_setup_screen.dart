@@ -40,7 +40,7 @@ class GameSetupScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -64,7 +64,7 @@ class GameSetupScreen extends ConsumerWidget {
                           Text(
                             'Play against Stockfish engine with customized rules and coaching tips.',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               fontSize: 14,
                             ),
                           ),
@@ -74,7 +74,7 @@ class GameSetupScreen extends ConsumerWidget {
                     const SizedBox(width: 16),
                     Icon(
                       Icons.play_circle_filled_rounded,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       size: 64,
                     ),
                   ],
@@ -127,7 +127,7 @@ class GameSetupScreen extends ConsumerWidget {
                           border: Border.all(
                             color: isSelected
                                 ? theme.colorScheme.primary
-                                : theme.dividerColor.withOpacity(0.1),
+                                : theme.dividerColor.withValues(alpha: 0.1),
                             width: 1.5,
                           ),
                         ),
@@ -155,7 +155,7 @@ class GameSetupScreen extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 color: isSelected
-                                    ? theme.colorScheme.onPrimaryContainer.withOpacity(0.7)
+                                    ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
                                     : theme.hintColor,
                               ),
                               textAlign: TextAlign.center,
@@ -212,7 +212,7 @@ class GameSetupScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -234,9 +234,9 @@ class GameSetupScreen extends ConsumerWidget {
                     child: SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         activeTrackColor: theme.colorScheme.primary,
-                        inactiveTrackColor: theme.colorScheme.primary.withOpacity(0.2),
+                        inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.2),
                         thumbColor: theme.colorScheme.primary,
-                        overlayColor: theme.colorScheme.primary.withOpacity(0.12),
+                        overlayColor: theme.colorScheme.primary.withValues(alpha: 0.12),
                         valueIndicatorColor: theme.colorScheme.primary,
                         valueIndicatorTextStyle: const TextStyle(color: Colors.white),
                       ),
@@ -301,7 +301,7 @@ class GameSetupScreen extends ConsumerWidget {
                           border: Border.all(
                             color: isSelected
                                 ? theme.colorScheme.primary
-                                : theme.dividerColor.withOpacity(0.1),
+                                : theme.dividerColor.withValues(alpha: 0.1),
                             width: 1.5,
                           ),
                         ),

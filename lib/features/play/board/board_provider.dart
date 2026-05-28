@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bishop/bishop.dart' as bishop;
 import 'package:square_bishop/square_bishop.dart';
@@ -83,7 +84,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
   void _startClock() {
     _clockTimer?.cancel();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (state.status != GameStatus.playing || _isBotThinking) return;
+      if (state.status != GameStatus.playing) return;
 
       if (_game.turn == 0) {
         // White turn
@@ -166,53 +167,56 @@ class BoardNotifier extends StateNotifier<BoardState> {
 
   Future<void> _triggerBotMove() async {
     _isBotThinking = true;
-    
-    final service = ref.read(stockfishServiceProvider);
-    final botMoveUci = await service.getBestMove(
-      _game.fen,
-      level: config.botLevel,
-    );
+    try {
+      final service = ref.read(stockfishServiceProvider);
+      final botMoveUci = await service.getBestMove(
+        _game.fen,
+        level: config.botLevel,
+      );
 
-    if (botMoveUci.isEmpty || state.status != GameStatus.playing) {
-      _isBotThinking = false;
-      return;
-    }
-
-    // Parse and apply bot move
-    final sqMove = _game.squaresSize.moveFromAlgebraic(botMoveUci);
-    final bishopMove = _game.bishopMove(sqMove);
-    final san = bishopMove != null ? _game.toSan(bishopMove) : '';
-
-    _game.makeSquaresMove(sqMove);
-
-    // Increment clock for bot
-    Duration newWhiteTime = state.whiteTime;
-    Duration newBlackTime = state.blackTime;
-    if (config.mode == GameMode.timed) {
-      final inc = Duration(seconds: config.timeControl.incrementSeconds);
-      if (_playerColorIndex == 1) {
-        // Bot is White
-        newWhiteTime += inc;
-      } else {
-        // Bot is Black
-        newBlackTime += inc;
+      if (botMoveUci.isEmpty || state.status != GameStatus.playing) {
+        return;
       }
+
+      // Parse and apply bot move
+      final sqMove = _game.squaresSize.moveFromAlgebraic(botMoveUci);
+      final bishopMove = _game.bishopMove(sqMove);
+      final san = bishopMove != null ? _game.toSan(bishopMove) : '';
+
+      _game.makeSquaresMove(sqMove);
+
+      // Increment clock for bot
+      Duration newWhiteTime = state.whiteTime;
+      Duration newBlackTime = state.blackTime;
+      if (config.mode == GameMode.timed) {
+        final inc = Duration(seconds: config.timeControl.incrementSeconds);
+        if (_playerColorIndex == 1) {
+          // Bot is White
+          newWhiteTime += inc;
+        } else {
+          // Bot is Black
+          newBlackTime += inc;
+        }
+      }
+
+      state = state.copyWith(
+        fen: _game.fen,
+        moves: [...state.moves, botMoveUci],
+        movesSan: [...state.movesSan, san],
+        isPlayerTurn: true,
+        lastMove: botMoveUci,
+        whiteTime: newWhiteTime,
+        blackTime: newBlackTime,
+        squaresState: _game.squaresState(_playerColorIndex),
+        threatSquares: _calculateThreatSquares(),
+      );
+
+      _checkGameOver();
+    } catch (e) {
+      debugPrint('Error during bot move execution: $e');
+    } finally {
+      _isBotThinking = false;
     }
-
-    state = state.copyWith(
-      fen: _game.fen,
-      moves: [...state.moves, botMoveUci],
-      movesSan: [...state.movesSan, san],
-      isPlayerTurn: true,
-      lastMove: botMoveUci,
-      whiteTime: newWhiteTime,
-      blackTime: newBlackTime,
-      squaresState: _game.squaresState(_playerColorIndex),
-      threatSquares: _calculateThreatSquares(),
-    );
-
-    _isBotThinking = false;
-    _checkGameOver();
   }
 
   void _checkGameOver() {
@@ -312,6 +316,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
             ? Value(config.timeControl.duration.inSeconds) 
             : const Value.absent(),
         playedAt: DateTime.now(),
+        playerColorIndex: Value(_playerColorIndex),
       );
 
       final gameId = await db.insertGame(gamesCompanion);
@@ -327,9 +332,9 @@ class BoardNotifier extends StateNotifier<BoardState> {
         await db.insertMove(movesCompanion);
       }
       
-      print('Game and moves saved successfully to SQLite database. GameID: $gameId');
+      debugPrint('Game and moves saved successfully to SQLite database. GameID: $gameId');
     } catch (e) {
-      print('Error saving game to SQLite database: $e');
+      debugPrint('Error saving game to SQLite database: $e');
     }
   }
 

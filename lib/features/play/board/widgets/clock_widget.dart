@@ -37,7 +37,7 @@ class ClockWidget extends StatelessWidget {
       }
     } else {
       backgroundColor = theme.cardTheme.color ?? theme.colorScheme.surface;
-      textColor = theme.textTheme.bodyMedium?.color?.withOpacity(0.6) ?? Colors.grey;
+      textColor = theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6) ?? Colors.grey;
     }
 
     return AnimatedContainer(
@@ -56,7 +56,7 @@ class ClockWidget extends StatelessWidget {
             ? [
                 BoxShadow(
                   color: (isLowTime ? theme.colorScheme.error : theme.colorScheme.primary)
-                      .withOpacity(0.25),
+                      .withValues(alpha: 0.25),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -82,7 +82,7 @@ class ClockWidget extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.5,
-                  color: textColor.withOpacity(0.7),
+                  color: textColor.withValues(alpha: 0.7),
                 ),
               ),
               Text(

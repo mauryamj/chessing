@@ -1,6 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bishop/bishop.dart' as bishop;
-import 'package:square_bishop/square_bishop.dart';
 import 'package:squares/squares.dart' as sq;
 
 void main() {
@@ -21,7 +21,7 @@ void main() {
       }
     }
     
-    print('Attacked squares count by Black: ${attackedList.length}');
-    print('Attacked squares names: ${attackedList.map((i) => sqSize.squareName(i)).toList()}');
+    debugPrint('Attacked squares count by Black: ${attackedList.length}');
+    debugPrint('Attacked squares names: ${attackedList.map((i) => sqSize.squareName(i)).toList()}');
   });
 }
