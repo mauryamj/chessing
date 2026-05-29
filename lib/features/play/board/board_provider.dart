@@ -9,7 +9,9 @@ import 'package:drift/drift.dart' show Value;
 import '../setup/game_setup_provider.dart';
 import 'board_state.dart';
 import '../../../core/engine/stockfish_service.dart';
+import '../../../core/engine/rating_service.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/database/daos/profile_dao.dart';
 
 class BoardNotifier extends StateNotifier<BoardState> {
   final GameConfig config;
@@ -282,38 +284,41 @@ class BoardNotifier extends StateNotifier<BoardState> {
   Future<void> _saveGameToDatabase() async {
     try {
       final db = ref.read(databaseProvider);
-      
+
       // Determine result string
       String resultStr = '1/2-1/2';
+      bool playerWon = false;
+      bool isDraw = false;
+
       if (state.status == GameStatus.checkmate) {
-        // The player whose turn it is lost
+        // The player whose turn it is LOST
+        final winnerColor = _game.turn == 0 ? 1 : 0; // opposite of who is to move
+        playerWon = winnerColor == _playerColorIndex;
         if (_game.turn == 0) {
-          resultStr = '0-1'; // Black won
+          resultStr = '0-1';
         } else {
-          resultStr = '1-0'; // White won
+          resultStr = '1-0';
         }
       } else if (state.status == GameStatus.resigned) {
-        // Resigned
-        if (_playerColorIndex == 0) {
-          resultStr = '0-1'; // White resigned, Black won
-        } else {
-          resultStr = '1-0'; // Black resigned, White won
-        }
+        playerWon = false; // player resigned
+        resultStr = _playerColorIndex == 0 ? '0-1' : '1-0';
       } else if (state.status == GameStatus.timeout) {
-        // Timeout
         final losingColor = state.whiteTime == Duration.zero ? 0 : 1;
+        playerWon = losingColor != _playerColorIndex;
         resultStr = losingColor == 0 ? '0-1' : '1-0';
+      } else {
+        isDraw = true;
       }
 
       final gamesCompanion = GamesCompanion.insert(
         pgn: _game.pgn(),
         result: resultStr,
         mode: config.mode.name,
-        botLevel: config.mode == GameMode.level 
-            ? Value(config.botLevel) 
+        botLevel: config.mode == GameMode.level
+            ? Value(config.botLevel)
             : const Value.absent(),
-        timeControlSeconds: config.mode == GameMode.timed 
-            ? Value(config.timeControl.duration.inSeconds) 
+        timeControlSeconds: config.mode == GameMode.timed
+            ? Value(config.timeControl.duration.inSeconds)
             : const Value.absent(),
         playedAt: DateTime.now(),
         playerColorIndex: Value(_playerColorIndex),
@@ -331,8 +336,29 @@ class BoardNotifier extends StateNotifier<BoardState> {
         );
         await db.insertMove(movesCompanion);
       }
-      
-      debugPrint('Game and moves saved successfully to SQLite database. GameID: $gameId');
+
+      // --- Elo rating update ---
+      await db.ensureProfileExists();
+      final profileData = await db.getProfile();
+      if (profileData != null) {
+        final botLevel = config.botLevel.clamp(1, 10);
+        final botElo = RatingService.botElo(botLevel);
+        final score = playerWon ? 1.0 : (isDraw ? 0.5 : 0.0);
+        final newRating = RatingService.calculate(
+          playerRating: profileData.currentRating,
+          opponentRating: botElo,
+          score: score,
+        );
+        await db.updateRating(
+          newRating: newRating,
+          isWin: playerWon,
+          isDraw: isDraw,
+        );
+        debugPrint('Rating updated: ${profileData.currentRating} → $newRating');
+      }
+
+      debugPrint(
+          'Game and moves saved to SQLite. GameID: $gameId');
     } catch (e) {
       debugPrint('Error saving game to SQLite database: $e');
     }

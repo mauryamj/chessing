@@ -8,6 +8,7 @@ import '../features/theory/detail/theory_detail_screen.dart';
 import '../features/roleplay/roleplay_home_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/history/match_log_screen.dart';
+import '../features/history/performance_screen.dart';
 import '../shared/widgets/app_bottom_nav.dart';
 import '../features/roleplay/modes/why_this_move_screen.dart';
 import '../features/roleplay/modes/coach_persona_screen.dart';
@@ -70,6 +71,13 @@ final router = GoRouter(
         GoRoute(
           path: '/history',
           builder: (context, state) => const MatchLogScreen(),
+          routes: [
+            GoRoute(
+              path: 'performance',
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (context, state) => const PerformanceScreen(),
+            ),
+          ],
         ),
         GoRoute(
           path: '/profile',

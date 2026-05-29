@@ -1,0 +1,61 @@
+name: Manual APK Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Type of APK to build'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6' # Or you can use a compatible stable version
+          channel: 'stable'
+          cache: true
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Run Build Runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Build APK
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
+            flutter build apk --debug --dart-define=GEMINI_API_KEY="$GEMINI_API_KEY"
+          else
+            flutter build apk --release --dart-define=GEMINI_API_KEY="$GEMINI_API_KEY"
+          fi
+        shell: bash
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ github.event.inputs.build_type }}-apk
+          path: build/app/outputs/flutter-apk/app-*.apk
+          if-no-files-found: error
+          retention-days: 7
