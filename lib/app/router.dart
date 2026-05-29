@@ -9,6 +9,9 @@ import '../features/roleplay/roleplay_home_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/history/match_log_screen.dart';
 import '../shared/widgets/app_bottom_nav.dart';
+import '../features/roleplay/modes/why_this_move_screen.dart';
+import '../features/roleplay/modes/coach_persona_screen.dart';
+import '../features/roleplay/modes/historical_match_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
@@ -41,9 +44,28 @@ final router = GoRouter(
             ),
           ],
         ),
+
+
         GoRoute(
           path: '/roleplay',
           builder: (context, state) => const RoleplayHomeScreen(),
+          routes: [
+            GoRoute(
+              path: 'why-this-move',
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (context, state) => const WhyThisMoveScreen(),
+            ),
+            GoRoute(
+              path: 'coach-persona',
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (context, state) => const CoachPersonaScreen(),
+            ),
+            GoRoute(
+              path: 'historical',
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (context, state) => const HistoricalMatchScreen(),
+            ),
+          ],
         ),
         GoRoute(
           path: '/history',

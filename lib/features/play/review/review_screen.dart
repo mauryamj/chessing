@@ -241,6 +241,7 @@ class ReviewScreen extends ConsumerWidget {
                                 child: BestMoveCard(
                                   bestMoveUci: currentBestMove,
                                   playerMoveUci: currentPlayerMove,
+                                  fen: reviewState.moves[currentPly].fen,
                                   showArrow: reviewState.showBestMoveArrow,
                                   onToggleArrow: notifier.toggleBestMoveArrow,
                                 ),

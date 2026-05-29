@@ -1,7 +1,7 @@
 # Chess App – Flutter Implementation Plan
 
 > Feed this file to your AI agent IDE. Each phase is a discrete, ordered task list.
-> Stack: Flutter · Riverpod · Stockfish · Drift (SQLite) · go_router · fl_chart · LLM API (Claude)
+> Stack: Flutter · Riverpod · Stockfish · Drift (SQLite) · go_router · fl_chart · LLM API (Gemini)
 
 ---
 
@@ -300,9 +300,9 @@ dev_dependencies:
     ```dart
     Future<String> ask(String systemPrompt, String userMessage);
     ```
-  - Uses `dio` to POST to Claude API (`/v1/messages`)
-  - Set `anthropic-version` header and `x-api-key` (from env / `--dart-define`)
-  - Model: `claude-sonnet-4-20250514`, `max_tokens: 300`
+  - Uses `dio` to POST to Gemini API (`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey`)
+  - Set request body with `contents` and `systemInstruction`
+  - Model: `gemini-2.5-flash`, `maxOutputTokens: 300`
   - Handle rate limit and network errors gracefully
 
 ### 3.2 Best-move tip generation
@@ -496,7 +496,7 @@ dev_dependencies:
 | Move generation | bishop + squares | Designed to work together, good Flutter integration |
 | Navigation | go_router | Deep link support, shell routes for bottom nav |
 | Charts | fl_chart | No dependencies, highly customisable |
-| AI coaching | Claude API (Sonnet) | Best instruction-following for chess context |
+| AI coaching | Gemini API (Gemini 2.5 Flash) | Cost-effective, high speed, and excellent instructions |
 | Board UI | squares | Most maintained Flutter chess board package |
 
 ---
@@ -505,10 +505,10 @@ dev_dependencies:
 
 ```bash
 # Add API key via dart-define (never hardcode)
-flutter run --dart-define=CLAUDE_API_KEY=your_key_here
+flutter run --dart-define=GEMINI_API_KEY=your_key_here
 
 # Access in code
-const apiKey = String.fromEnvironment('CLAUDE_API_KEY');
+const apiKey = String.fromEnvironment('GEMINI_API_KEY');
 ```
 
 Add to `.gitignore`:

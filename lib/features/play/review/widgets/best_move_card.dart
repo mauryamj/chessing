@@ -1,10 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:squares/squares.dart' as sq;
+import '../../../../core/ai/coaching_service.dart';
 
-class BestMoveCard extends StatelessWidget {
+class BestMoveCard extends ConsumerWidget {
   final String? bestMoveUci;
   final String? playerMoveUci;
+  final String fen;
   final VoidCallback onToggleArrow;
   final bool showArrow;
 
@@ -12,12 +15,13 @@ class BestMoveCard extends StatelessWidget {
     super.key,
     required this.bestMoveUci,
     required this.playerMoveUci,
+    required this.fen,
     required this.onToggleArrow,
     required this.showArrow,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     if (bestMoveUci == null || bestMoveUci!.isEmpty) {
@@ -26,6 +30,16 @@ class BestMoveCard extends StatelessWidget {
 
     final fromName = bestMoveUci!.substring(0, 2);
     final toName = bestMoveUci!.substring(2, 4);
+
+    final tipAsyncValue = ref.watch(
+      bestMoveTipProvider(
+        BestMoveTipArg(
+          fen: fen,
+          bestMoveUci: bestMoveUci!,
+          playerMoveUci: playerMoveUci ?? '',
+        ),
+      ),
+    );
 
     return Card(
       elevation: 2,
@@ -67,12 +81,35 @@ class BestMoveCard extends StatelessWidget {
               'Stockfish suggests playing $fromName → $toName instead of your move.',
               style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Coaching Tip: Analyzing this position to explain strategic concepts... (Claude coaching explanations will be fully connected in Phase 3).',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-                fontStyle: FontStyle.italic,
+            const SizedBox(height: 8),
+            tipAsyncValue.when(
+              data: (tip) => Text(
+                'Coaching Tip: $tip',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              loading: () => Row(
+                children: [
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Asking Gemini coach...',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                  ),
+                ],
+              ),
+              error: (error, _) => Text(
+                'Coaching Tip: Could not get advice from Gemini.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
           ],
