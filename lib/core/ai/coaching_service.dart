@@ -1,5 +1,7 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'prompts.dart';
 
 final coachingServiceProvider = Provider<CoachingService>((ref) {
   return CoachingService();
@@ -9,9 +11,20 @@ class CoachingService {
   final Dio _dio = Dio();
   static const String apiKey = String.fromEnvironment('GEMINI_API_KEY');
 
+  /// Returns true when any network interface is available.
+  Future<bool> _isOnline() async {
+    final result = await Connectivity().checkConnectivity();
+    return result.any((r) => r != ConnectivityResult.none);
+  }
+
   Future<String> ask(String systemPrompt, String userMessage) async {
     if (apiKey.isEmpty) {
       return "Coaching unavailable: Gemini API key is missing. Please run with --dart-define=GEMINI_API_KEY=your_key";
+    }
+
+    // Graceful offline degradation (5.3)
+    if (!await _isOnline()) {
+      return "Coaching unavailable offline. Connect to the internet and try again.";
     }
 
     try {
@@ -39,6 +52,8 @@ class CoachingService {
           headers: {
             'Content-Type': 'application/json',
           },
+          sendTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 20),
         ),
       );
 
@@ -59,6 +74,13 @@ class CoachingService {
       } else {
         return "Coaching unavailable: API returned status ${response.statusCode}";
       }
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return "Coaching request timed out. Check your connection and try again.";
+      }
+      return "Coaching unavailable offline.";
     } catch (e) {
       return "Coaching unavailable offline.";
     }
@@ -69,19 +91,21 @@ class CoachingService {
     required String bestMoveUci,
     required String playerMoveUci,
   }) async {
-    const systemPrompt = "You are a chess coach. Given a position, explain in one sentence (max 20 words) why the suggested move is better than what the player played.";
-    final userMessage = "Position FEN: $fen\nPlayer played: $playerMoveUci\nSuggested best move: $bestMoveUci";
+    const systemPrompt = AiPrompts.bestMoveTipSystem;
+    final userMessage =
+        "Position FEN: $fen\nPlayer played: $playerMoveUci\nSuggested best move: $bestMoveUci";
     return ask(systemPrompt, userMessage);
   }
 
   Future<String> explainMove(String fen, String moveUci) async {
-    const systemPrompt = "You are Magnus Carlsen. Explain your reasoning for this chess move in 2–3 sentences in first person.";
+    const systemPrompt = AiPrompts.magnusCarlsenSystem;
     final userMessage = "Position FEN: $fen\nMove selected: $moveUci";
     return ask(systemPrompt, userMessage);
   }
 
-  Future<String> commentMove(String fen, String moveSan, String playerName) async {
-    final systemPrompt = "You are a chess commentator. In 1–2 sentences, explain what $playerName just did and why.";
+  Future<String> commentMove(
+      String fen, String moveSan, String playerName) async {
+    final systemPrompt = AiPrompts.commentatorSystem(playerName);
     final userMessage = "Position FEN: $fen\nMove played: $moveSan by $playerName";
     return ask(systemPrompt, userMessage);
   }
@@ -111,7 +135,8 @@ class BestMoveTipArg {
   int get hashCode => fen.hashCode ^ bestMoveUci.hashCode ^ playerMoveUci.hashCode;
 }
 
-final bestMoveTipProvider = FutureProvider.family<String, BestMoveTipArg>((ref, arg) async {
+final bestMoveTipProvider =
+    FutureProvider.family<String, BestMoveTipArg>((ref, arg) async {
   final service = ref.read(coachingServiceProvider);
   return service.getBestMoveTip(
     fen: arg.fen,

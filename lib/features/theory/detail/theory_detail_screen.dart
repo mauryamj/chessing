@@ -6,6 +6,7 @@ import 'package:square_bishop/square_bishop.dart';
 import '../library/theory_provider.dart';
 import '../models/theory_entry.dart';
 import '../../../core/ai/coaching_service.dart';
+import '../../../core/ai/prompts.dart';
 import '../../../app/theme.dart';
 
 class TheoryDetailScreen extends ConsumerStatefulWidget {
@@ -88,7 +89,7 @@ class _TheoryDetailScreenState extends ConsumerState<TheoryDetailScreen> {
       final coach = ref.read(coachingServiceProvider);
       // Let's ask Gemini to explain the current FEN position
       final response = await coach.ask(
-        "You are a grandmaster chess coach explaining chess theory to an intermediate player. Explain the strategic value of this position in 2 sentences.",
+        AiPrompts.theoryExplanationSystem,
         "Position FEN: ${_game.fen}"
       );
       setState(() {

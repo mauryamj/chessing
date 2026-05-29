@@ -8,15 +8,32 @@ import 'widgets/move_timeline.dart';
 import 'widgets/blunder_map.dart';
 import 'widgets/best_move_card.dart';
 import '../../../app/theme.dart';
+import '../../settings/settings_provider.dart';
 
 class ReviewScreen extends ConsumerWidget {
   final int gameId;
 
   const ReviewScreen({super.key, required this.gameId});
 
-  sq.BoardTheme _getBoardTheme(BuildContext context) {
-    final ext = Theme.of(context).extension<ChessBoardTheme>();
-    if (ext == null) return sq.BoardTheme.brown;
+  sq.BoardTheme _getBoardTheme(BuildContext context, WidgetRef ref) {
+    final boardThemeType = ref.watch(boardThemeTypeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    ChessBoardTheme ext;
+    switch (boardThemeType) {
+      case BoardThemeType.wood:
+        ext = isDark ? ChessBoardTheme.woodDark : ChessBoardTheme.woodLight;
+        break;
+      case BoardThemeType.neon:
+        ext = isDark ? ChessBoardTheme.neonDark : ChessBoardTheme.neonLight;
+        break;
+      case BoardThemeType.minimal:
+        ext = isDark ? ChessBoardTheme.minimalDark : ChessBoardTheme.minimalLight;
+        break;
+      case BoardThemeType.classic:
+        ext = Theme.of(context).extension<ChessBoardTheme>() ??
+            (isDark ? ChessBoardTheme.classicDark : ChessBoardTheme.classicLight);
+        break;
+    }
     return sq.BoardTheme(
       lightSquare: ext.lightSquareColor,
       darkSquare: ext.darkSquareColor,
@@ -153,17 +170,27 @@ class ReviewScreen extends ConsumerWidget {
                                         sq.Board(
                                           state: reviewState.currentSquaresState.board,
                                           pieceSet: sq.PieceSet.merida(),
-                                          theme: _getBoardTheme(context),
+                                          theme: _getBoardTheme(context, ref),
                                           size: reviewState.currentSquaresState.size,
                                           draggable: false,
                                           overlays: [
-                                            if (reviewState.showBestMoveArrow &&
-                                                currentBestMove != null &&
+                                            if (currentBestMove != null &&
                                                 currentBestMove.isNotEmpty &&
-                                                currentPlayerMove != currentBestMove)
-                                              BestMoveArrowOverlay(
-                                                uci: currentBestMove,
-                                                orientation: reviewState.game.playerColorIndex,
+                                                currentPlayerMove !=
+                                                    currentBestMove)
+                                              AnimatedOpacity(
+                                                opacity: reviewState
+                                                        .showBestMoveArrow
+                                                    ? 1.0
+                                                    : 0.0,
+                                                duration: const Duration(
+                                                    milliseconds: 250),
+                                                curve: Curves.easeIn,
+                                                child: BestMoveArrowOverlay(
+                                                  uci: currentBestMove,
+                                                  orientation: reviewState
+                                                      .game.playerColorIndex,
+                                                ),
                                               ),
                                           ],
                                         ),

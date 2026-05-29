@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/ai/coaching_service.dart';
+import '../../../core/ai/prompts.dart';
 import '../../../core/database/app_database.dart';
-
-class ChatMessage {
-  final String role; // 'user' or 'coach'
-  final String content;
-  final DateTime timestamp;
-
-  ChatMessage({required this.role, required this.content, required this.timestamp});
-}
+import '../roleplay_provider.dart';
 
 class CoachPersonaScreen extends ConsumerStatefulWidget {
   const CoachPersonaScreen({super.key});
@@ -19,27 +13,18 @@ class CoachPersonaScreen extends ConsumerStatefulWidget {
 }
 
 class _CoachPersonaScreenState extends ConsumerState<CoachPersonaScreen> {
-  final List<ChatMessage> _messages = [];
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  bool _isLoading = false;
 
   List<Game> _recentGames = [];
   Game? _selectedRecentGame;
-  String _gameContextPgn = '';
 
   @override
   void initState() {
     super.initState();
     _loadRecentGames();
-    // Welcome message
-    _messages.add(
-      ChatMessage(
-        role: 'coach',
-        content: "Hello! I am your Grandmaster Chess Coach. I can help you analyze your games, explain positional concepts, or answer any strategic questions you have. Feel free to load a game PGN from your history so we can review it together!",
-        timestamp: DateTime.now(),
-      ),
-    );
+    // Scroll to bottom after frame rendering to show existing chat messages
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(animated: false));
   }
 
   Future<void> _loadRecentGames() async {
@@ -54,26 +39,23 @@ class _CoachPersonaScreenState extends ConsumerState<CoachPersonaScreen> {
     if (game == null) return;
     setState(() {
       _selectedRecentGame = game;
-      _gameContextPgn = game.pgn;
-      _messages.add(
-        ChatMessage(
-          role: 'coach',
-          content: "Excellent! I have loaded that match (Result: ${game.result}). What would you like to know about it? We can review key moments, blunders, or general strategy.",
-          timestamp: DateTime.now(),
-        ),
-      );
     });
+    ref.read(coachPersonaChatProvider.notifier).setGameContext(game.pgn, game.result);
     _scrollToBottom();
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool animated = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+        if (animated) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        } else {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
       }
     });
   }
@@ -82,47 +64,42 @@ class _CoachPersonaScreenState extends ConsumerState<CoachPersonaScreen> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
+    final chatNotifier = ref.read(coachPersonaChatProvider.notifier);
+    final chatState = ref.read(coachPersonaChatProvider);
+
     _textController.clear();
-    setState(() {
-      _messages.add(ChatMessage(role: 'user', content: text, timestamp: DateTime.now()));
-      _isLoading = true;
-    });
+
+    // 1. Build conversation history for context before updating state
+    final buffer = StringBuffer();
+    buffer.writeln(AiPrompts.coachPersonaBaseSystem);
+    if (chatState.gameContextPgn.isNotEmpty) {
+      buffer.writeln("Here is the context of the game being discussed:\n${chatState.gameContextPgn}\n");
+    }
+    buffer.writeln("Previous discussion:");
+    for (final msg in chatState.messages) {
+      buffer.writeln("${msg.role == 'user' ? 'User' : 'Coach'}: ${msg.content}");
+    }
+
+    final systemPrompt = buffer.toString();
+    final userMessage = text;
+
+    // 2. Add message and set loading
+    chatNotifier.addMessage(ChatMessage(role: 'user', content: text, timestamp: DateTime.now()));
+    chatNotifier.setLoading(true);
     _scrollToBottom();
 
     try {
       final coachService = ref.read(coachingServiceProvider);
-      
-      // Build conversation history for context
-      final buffer = StringBuffer();
-      buffer.writeln("You are a GM chess coach reviewing the user's game. Help them learn and get better.");
-      if (_gameContextPgn.isNotEmpty) {
-        buffer.writeln("Here is the context of the game being discussed:\n$_gameContextPgn\n");
-      }
-      buffer.writeln("Previous discussion:");
-      for (final msg in _messages.take(_messages.length - 1)) {
-        buffer.writeln("${msg.role == 'user' ? 'User' : 'Coach'}: ${msg.content}");
-      }
-
-      final systemPrompt = buffer.toString();
-      final userMessage = text;
-
       final reply = await coachService.ask(systemPrompt, userMessage);
-      
-      setState(() {
-        _messages.add(ChatMessage(role: 'coach', content: reply, timestamp: DateTime.now()));
-      });
+      chatNotifier.addMessage(ChatMessage(role: 'coach', content: reply, timestamp: DateTime.now()));
     } catch (e) {
-      setState(() {
-        _messages.add(ChatMessage(
-          role: 'coach',
-          content: "Sorry, I lost connection to the server. Please check your internet connection.",
-          timestamp: DateTime.now(),
-        ));
-      });
+      chatNotifier.addMessage(ChatMessage(
+        role: 'coach',
+        content: "Sorry, I lost connection to the server. Please check your internet connection.",
+        timestamp: DateTime.now(),
+      ));
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      chatNotifier.setLoading(false);
       _scrollToBottom();
     }
   }
@@ -130,10 +107,23 @@ class _CoachPersonaScreenState extends ConsumerState<CoachPersonaScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final chatState = ref.watch(coachPersonaChatProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('GM Chess Coach Persona'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_rounded),
+            tooltip: 'Clear Chat',
+            onPressed: () {
+              ref.read(coachPersonaChatProvider.notifier).clearChat();
+              setState(() {
+                _selectedRecentGame = null;
+              });
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -173,8 +163,8 @@ class _CoachPersonaScreenState extends ConsumerState<CoachPersonaScreen> {
                         onPressed: () {
                           setState(() {
                             _selectedRecentGame = null;
-                            _gameContextPgn = '';
                           });
+                          ref.read(coachPersonaChatProvider.notifier).clearGameContext();
                         },
                       ),
                   ],
@@ -186,9 +176,9 @@ class _CoachPersonaScreenState extends ConsumerState<CoachPersonaScreen> {
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
-                itemCount: _messages.length,
+                itemCount: chatState.messages.length,
                 itemBuilder: (context, index) {
-                  final msg = _messages[index];
+                  final msg = chatState.messages[index];
                   final isCoach = msg.role == 'coach';
 
                   return Align(
@@ -241,7 +231,7 @@ class _CoachPersonaScreenState extends ConsumerState<CoachPersonaScreen> {
               ),
             ),
 
-            if (_isLoading)
+            if (chatState.isLoading)
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(

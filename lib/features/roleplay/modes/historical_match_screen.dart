@@ -4,6 +4,7 @@ import 'package:squares/squares.dart' as sq;
 import 'package:bishop/bishop.dart' as bishop;
 import 'package:square_bishop/square_bishop.dart';
 import '../../../core/ai/coaching_service.dart';
+import '../../../core/pgn/pgn_parser.dart';
 import '../../../app/theme.dart';
 
 class HistoricalGame {
@@ -66,7 +67,7 @@ class _HistoricalMatchScreenState extends ConsumerState<HistoricalMatchScreen> {
     try {
       final pgnText = await DefaultAssetBundle.of(context).loadString(_selectedGame.assetPath);
       if (!mounted) return;
-      final parsedMoves = _parsePgnMoves(pgnText);
+      final parsedMoves = PgnParser.parseMoves(pgnText);
       setState(() {
         _moves = parsedMoves;
         _currentPly = -1;
@@ -79,40 +80,6 @@ class _HistoricalMatchScreenState extends ConsumerState<HistoricalMatchScreen> {
         SnackBar(content: Text('Failed to load PGN: $e')),
       );
     }
-  }
-
-  List<String> _parsePgnMoves(String pgn) {
-    // 1. Remove PGN headers
-    final headersRemoved = pgn.replaceAll(RegExp(r'\[.*?\]'), '');
-    
-    // 2. Remove comments
-    final commentsRemoved = headersRemoved.replaceAll(RegExp(r'\{.*?\}'), '');
-    
-    // 3. Remove variations (if any)
-    final variationsRemoved = commentsRemoved.replaceAll(RegExp(r'\(.*?\u0029'), '');
-    
-    // 4. Tokenize by whitespace
-    final tokens = variationsRemoved.split(RegExp(r'\s+'));
-    final List<String> moves = [];
-    
-    for (final token in tokens) {
-      if (token.isEmpty) continue;
-      // Skip move numbers (e.g. "1.", "1...", "20.")
-      if (RegExp(r'^\d+\.+$').hasMatch(token)) continue;
-      // Skip result signs
-      if (token == '1-0' || token == '0-1' || token == '1/2-1/2' || token == '*') continue;
-      
-      // Remove any numeric tags from move (like "1.e4" without space)
-      var cleanToken = token;
-      if (token.contains('.')) {
-        final parts = token.split('.');
-        cleanToken = parts.last;
-      }
-      if (cleanToken.isNotEmpty) {
-        moves.add(cleanToken);
-      }
-    }
-    return moves;
   }
 
   void _loadPly(int ply) {

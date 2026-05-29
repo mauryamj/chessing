@@ -6,7 +6,9 @@ import 'package:bishop/bishop.dart' as bishop;
 import 'package:square_bishop/square_bishop.dart';
 import 'package:squares/squares.dart' as sq;
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/services.dart';
 import '../setup/game_setup_provider.dart';
+import '../../settings/settings_provider.dart';
 import 'board_state.dart';
 import '../../../core/engine/stockfish_service.dart';
 import '../../../core/engine/rating_service.dart';
@@ -33,9 +35,9 @@ class BoardNotifier extends StateNotifier<BoardState> {
           squaresState: SquaresState(
             player: 0,
             state: sq.PlayState.observing,
-            size: sq.BoardSize(8, 8),
-            board: sq.BoardState(board: [], turn: 0),
-            moves: [],
+            size: const sq.BoardSize(8, 8),
+            board: const sq.BoardState(board: [], turn: 0),
+            moves: const [],
           ),
           playerColorIndex: 0,
           threatSquares: const [],
@@ -95,6 +97,9 @@ class BoardNotifier extends StateNotifier<BoardState> {
           _handleTimeout(0);
         } else {
           state = state.copyWith(whiteTime: newTime);
+          if (_playerColorIndex == 0 && newTime.inSeconds <= 10) {
+            _triggerClockWarning();
+          }
         }
       } else {
         // Black turn
@@ -103,6 +108,9 @@ class BoardNotifier extends StateNotifier<BoardState> {
           _handleTimeout(1);
         } else {
           state = state.copyWith(blackTime: newTime);
+          if (_playerColorIndex == 1 && newTime.inSeconds <= 10) {
+            _triggerClockWarning();
+          }
         }
       }
     });
@@ -130,9 +138,12 @@ class BoardNotifier extends StateNotifier<BoardState> {
     
     final uci = _moveToUci(bishopMove);
     final san = _game.toSan(bishopMove);
+    final isCapture = bishopMove.capture;
 
     final success = _game.makeSquaresMove(move);
     if (!success) return false;
+
+    _triggerFeedback(isCapture: isCapture, isCheck: _game.inCheck);
 
     // Increment clock if timed mode has increment
     Duration newWhiteTime = state.whiteTime;
@@ -184,8 +195,11 @@ class BoardNotifier extends StateNotifier<BoardState> {
       final sqMove = _game.squaresSize.moveFromAlgebraic(botMoveUci);
       final bishopMove = _game.bishopMove(sqMove);
       final san = bishopMove != null ? _game.toSan(bishopMove) : '';
+      final isCapture = bishopMove?.capture ?? false;
 
       _game.makeSquaresMove(sqMove);
+
+      _triggerFeedback(isCapture: isCapture, isCheck: _game.inCheck);
 
       // Increment clock for bot
       Duration newWhiteTime = state.whiteTime;
@@ -247,7 +261,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
   List<int> _calculateThreatSquares() {
     final opponent = 1 - _playerColorIndex;
     final threatSquares = <int>[];
-    final sqSize = sq.BoardSize.standard;
+    const sqSize = sq.BoardSize.standard;
     for (int i = 0; i < 64; i++) {
       final name = sqSize.squareName(i);
       final bpSquareIndex = _game.size.squareNumber(name);
@@ -368,6 +382,43 @@ class BoardNotifier extends StateNotifier<BoardState> {
   void dispose() {
     _clockTimer?.cancel();
     super.dispose();
+  }
+
+  void _triggerFeedback({required bool isCapture, required bool isCheck}) {
+    final settings = ref.read(settingsProvider).value;
+    final soundEnabled = settings?.soundEnabled ?? true;
+    final hapticsEnabled = settings?.hapticsEnabled ?? true;
+
+    if (hapticsEnabled) {
+      if (isCheck) {
+        HapticFeedback.heavyImpact();
+      } else if (isCapture) {
+        HapticFeedback.mediumImpact();
+      } else {
+        HapticFeedback.lightImpact();
+      }
+    }
+
+    if (soundEnabled) {
+      if (isCheck) {
+        SystemSound.play(SystemSoundType.alert);
+      } else {
+        SystemSound.play(SystemSoundType.click);
+      }
+    }
+  }
+
+  void _triggerClockWarning() {
+    final settings = ref.read(settingsProvider).value;
+    final soundEnabled = settings?.soundEnabled ?? true;
+    final hapticsEnabled = settings?.hapticsEnabled ?? true;
+
+    if (hapticsEnabled) {
+      HapticFeedback.lightImpact();
+    }
+    if (soundEnabled) {
+      SystemSound.play(SystemSoundType.click);
+    }
   }
 }
 

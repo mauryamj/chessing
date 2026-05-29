@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'profile_provider.dart';
 import 'widgets/rating_card.dart';
 import 'widgets/wdl_donut.dart';
@@ -118,6 +119,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         games: games,
                       ),
                     ),
+                    const SizedBox(height: 20),
+
+                    // ── Settings ─────────────────────────────────────────
+                    _SettingsTile(),
                     const SizedBox(height: 32),
                   ]),
                 ),
@@ -281,6 +286,57 @@ class _SectionCard extends StatelessWidget {
           const SizedBox(height: 16),
           child,
         ],
+      ),
+    );
+  }
+}
+
+// ── Settings tile ─────────────────────────────────────────────────────────────
+
+class _SettingsTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Semantics(
+      label: 'Open settings',
+      button: true,
+      child: InkWell(
+        onTap: () => context.push('/settings'),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.cardTheme.color ?? cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: cs.shadow.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+            leading: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.settings_rounded,
+                  color: cs.primary, size: 22),
+            ),
+            title: const Text('Settings',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text('Theme, board, sound & haptics'),
+            trailing: Icon(Icons.chevron_right_rounded,
+                color: cs.onSurface.withValues(alpha: 0.4)),
+          ),
+        ),
       ),
     );
   }

@@ -236,9 +236,6 @@ class StockfishService {
     }
   }
 
-  String _moveToUci(bishop.Game game, bishop.Move m) {
-    return _moveToUciStatic(game, m);
-  }
 
   void dispose() {
     _stdoutSubscription?.cancel();

@@ -10,15 +10,32 @@ import 'widgets/captured_pieces_bar.dart';
 import 'widgets/material_diff_bar.dart';
 import 'widgets/legal_moves_overlay.dart';
 import '../../../app/theme.dart';
+import '../../settings/settings_provider.dart';
 
 class BoardScreen extends ConsumerWidget {
   final Map<String, dynamic>? config;
 
   const BoardScreen({super.key, this.config});
 
-  sq.BoardTheme _getBoardTheme(BuildContext context) {
-    final ext = Theme.of(context).extension<ChessBoardTheme>();
-    if (ext == null) return sq.BoardTheme.brown;
+  sq.BoardTheme _getBoardTheme(BuildContext context, WidgetRef ref) {
+    final boardThemeType = ref.watch(boardThemeTypeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    ChessBoardTheme ext;
+    switch (boardThemeType) {
+      case BoardThemeType.wood:
+        ext = isDark ? ChessBoardTheme.woodDark : ChessBoardTheme.woodLight;
+        break;
+      case BoardThemeType.neon:
+        ext = isDark ? ChessBoardTheme.neonDark : ChessBoardTheme.neonLight;
+        break;
+      case BoardThemeType.minimal:
+        ext = isDark ? ChessBoardTheme.minimalDark : ChessBoardTheme.minimalLight;
+        break;
+      case BoardThemeType.classic:
+        ext = Theme.of(context).extension<ChessBoardTheme>() ??
+            (isDark ? ChessBoardTheme.classicDark : ChessBoardTheme.classicLight);
+        break;
+    }
     return sq.BoardTheme(
       lightSquare: ext.lightSquareColor,
       darkSquare: ext.darkSquareColor,
@@ -204,7 +221,7 @@ class BoardScreen extends ConsumerWidget {
                           state: boardState.squaresState.board,
                           playState: boardState.squaresState.state,
                           pieceSet: sq.PieceSet.merida(),
-                          theme: _getBoardTheme(context),
+                          theme: _getBoardTheme(context, ref),
                           size: boardState.squaresState.size,
                           moves: boardState.squaresState.moves,
                           markerTheme: legalMovesMarkerTheme,
@@ -314,73 +331,90 @@ class BoardScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // Threat HUD toggle button
-                  ElevatedButton.icon(
-                    onPressed: notifier.toggleThreatOverlay,
-                    icon: Icon(
-                      boardState.threatOverlayEnabled ? Icons.shield : Icons.shield_outlined,
-                      color: boardState.threatOverlayEnabled ? Colors.red : theme.hintColor,
-                    ),
-                    label: Text(
-                      'Threat HUD',
-                      style: TextStyle(
-                        color: boardState.threatOverlayEnabled ? Colors.red : theme.textTheme.bodyMedium?.color,
-                        fontWeight: boardState.threatOverlayEnabled ? FontWeight.bold : FontWeight.normal,
+                  Semantics(
+                    label: boardState.threatOverlayEnabled
+                        ? 'Threat overlay enabled, tap to disable'
+                        : 'Threat overlay disabled, tap to enable',
+                    button: true,
+                    excludeSemantics: true,
+                    child: ElevatedButton.icon(
+                      onPressed: notifier.toggleThreatOverlay,
+                      icon: Icon(
+                        boardState.threatOverlayEnabled ? Icons.shield : Icons.shield_outlined,
+                        color: boardState.threatOverlayEnabled ? Colors.red : theme.hintColor,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      elevation: 1,
-                      backgroundColor: boardState.threatOverlayEnabled
-                          ? Colors.red.withValues(alpha: 0.08)
-                          : theme.cardTheme.color,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      label: Text(
+                        'Threat HUD',
+                        style: TextStyle(
+                          color: boardState.threatOverlayEnabled ? Colors.red : theme.textTheme.bodyMedium?.color,
+                          fontWeight: boardState.threatOverlayEnabled ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        elevation: 1,
+                        backgroundColor: boardState.threatOverlayEnabled
+                            ? Colors.red.withValues(alpha: 0.08)
+                            : theme.cardTheme.color,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     ),
                   ),
 
-                  // Resign button
+                  // Resign / Back button
                   if (boardState.status == GameStatus.playing)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Resign?'),
-                            content: const Text('Are you sure you want to resign the game?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(ctx);
-                                  notifier.resign();
-                                },
-                                child: const Text('Resign', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.flag, color: Colors.red),
-                      label: const Text('Resign', style: TextStyle(color: Colors.red)),
-                      style: ElevatedButton.styleFrom(
-                        elevation: 1,
-                        backgroundColor: theme.cardTheme.color,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    Semantics(
+                      label: 'Resign the current game',
+                      button: true,
+                      excludeSemantics: true,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Resign?'),
+                              content: const Text('Are you sure you want to resign the game?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    notifier.resign();
+                                  },
+                                  child: const Text('Resign', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.flag, color: Colors.red),
+                        label: const Text('Resign', style: TextStyle(color: Colors.red)),
+                        style: ElevatedButton.styleFrom(
+                          elevation: 1,
+                          backgroundColor: theme.cardTheme.color,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
                       ),
                     )
                   else
-                    ElevatedButton.icon(
-                      onPressed: () => context.pop(),
-                      icon: const Icon(Icons.exit_to_app),
-                      label: const Text('Back to Menu'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    Semantics(
+                      label: 'Return to setup menu',
+                      button: true,
+                      excludeSemantics: true,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.pop(),
+                        icon: const Icon(Icons.exit_to_app),
+                        label: const Text('Back to Menu'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
                       ),
                     ),
                 ],

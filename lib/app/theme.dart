@@ -86,6 +86,75 @@ class ChessBoardTheme extends ThemeExtension<ChessBoardTheme> {
     threatSquareColor: const Color(0x4DFF0000),
     legalMoveDotColor: const Color(0x40FFFFFF),
   );
+
+  // Wood theme
+  static final woodLight = ChessBoardTheme(
+    lightSquareColor: const Color(0xFFDEB887),
+    darkSquareColor: const Color(0xFF8B4513),
+    selectedSquareColor: const Color(0x80FFD700),
+    checkSquareColor: const Color(0xFFDC143C),
+    lastMoveSourceColor: const Color(0x60FFD700),
+    lastMoveDestColor: const Color(0x80FFD700),
+    threatSquareColor: const Color(0x4DFF4500),
+    legalMoveDotColor: const Color(0x50000000),
+  );
+
+  static final woodDark = ChessBoardTheme(
+    lightSquareColor: const Color(0xFFC8A87A),
+    darkSquareColor: const Color(0xFF6B3410),
+    selectedSquareColor: const Color(0x80FFD700),
+    checkSquareColor: const Color(0xFFDC143C),
+    lastMoveSourceColor: const Color(0x60FFD700),
+    lastMoveDestColor: const Color(0x80FFD700),
+    threatSquareColor: const Color(0x4DFF4500),
+    legalMoveDotColor: const Color(0x50FFFFFF),
+  );
+
+  // Neon theme
+  static final neonLight = ChessBoardTheme(
+    lightSquareColor: const Color(0xFF1A1A2E),
+    darkSquareColor: const Color(0xFF16213E),
+    selectedSquareColor: const Color(0xA000FFCC),
+    checkSquareColor: const Color(0xFFFF0066),
+    lastMoveSourceColor: const Color(0x7000FFCC),
+    lastMoveDestColor: const Color(0xA000FFCC),
+    threatSquareColor: const Color(0x55FF0066),
+    legalMoveDotColor: const Color(0xCC00FFCC),
+  );
+
+  static final neonDark = ChessBoardTheme(
+    lightSquareColor: const Color(0xFF0D0D1A),
+    darkSquareColor: const Color(0xFF101025),
+    selectedSquareColor: const Color(0xA000FFCC),
+    checkSquareColor: const Color(0xFFFF0066),
+    lastMoveSourceColor: const Color(0x7000FFCC),
+    lastMoveDestColor: const Color(0xA000FFCC),
+    threatSquareColor: const Color(0x55FF0066),
+    legalMoveDotColor: const Color(0xCC00FFCC),
+  );
+
+  // Minimal theme
+  static final minimalLight = ChessBoardTheme(
+    lightSquareColor: const Color(0xFFF5F5F5),
+    darkSquareColor: const Color(0xFF9E9E9E),
+    selectedSquareColor: const Color(0x803F51B5),
+    checkSquareColor: const Color(0xFFF44336),
+    lastMoveSourceColor: const Color(0x603F51B5),
+    lastMoveDestColor: const Color(0x803F51B5),
+    threatSquareColor: const Color(0x40F44336),
+    legalMoveDotColor: const Color(0x50000000),
+  );
+
+  static final minimalDark = ChessBoardTheme(
+    lightSquareColor: const Color(0xFF424242),
+    darkSquareColor: const Color(0xFF212121),
+    selectedSquareColor: const Color(0x807C4DFF),
+    checkSquareColor: const Color(0xFFEF5350),
+    lastMoveSourceColor: const Color(0x607C4DFF),
+    lastMoveDestColor: const Color(0x807C4DFF),
+    threatSquareColor: const Color(0x40EF5350),
+    legalMoveDotColor: const Color(0x50FFFFFF),
+  );
 }
 
 class AppTheme {

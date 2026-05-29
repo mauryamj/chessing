@@ -140,7 +140,7 @@ class BestMoveArrowOverlay extends StatelessWidget {
           final double cellWidth = boardSize / 8;
           final double cellHeight = boardSize / 8;
 
-          final sqSize = sq.BoardSize.standard;
+          const sqSize = sq.BoardSize.standard;
           final fromIndex = sqSize.squareNumber(uci.substring(0, 2));
           final toIndex = sqSize.squareNumber(uci.substring(2, 4));
 
@@ -200,7 +200,7 @@ class ArrowPainter extends CustomPainter {
     // Shorten line slightly so arrow sits nicely
     Offset finalTo = to;
     if (distance > 30) {
-      final double shortenBy = 15.0;
+      const double shortenBy = 15.0;
       final double ratio = (distance - shortenBy) / distance;
       finalTo = Offset(
         from.dx + (to.dx - from.dx) * ratio,
@@ -213,7 +213,7 @@ class ArrowPainter extends CustomPainter {
 
     // Draw arrowhead at finalTo
     final double angle = atan2(to.dy - from.dy, to.dx - from.dx);
-    final double arrowSize = 16.0;
+    const double arrowSize = 16.0;
 
     final path = Path()
       ..moveTo(finalTo.dx, finalTo.dy)
