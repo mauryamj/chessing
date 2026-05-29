@@ -11,120 +11,79 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
   static const VerificationMeta _pgnMeta = const VerificationMeta('pgn');
   @override
   late final GeneratedColumn<String> pgn = GeneratedColumn<String>(
-    'pgn',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'pgn', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _resultMeta = const VerificationMeta('result');
   @override
   late final GeneratedColumn<String> result = GeneratedColumn<String>(
-    'result',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'result', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _modeMeta = const VerificationMeta('mode');
   @override
   late final GeneratedColumn<String> mode = GeneratedColumn<String>(
-    'mode',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _botLevelMeta = const VerificationMeta(
-    'botLevel',
-  );
+      'mode', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _botLevelMeta =
+      const VerificationMeta('botLevel');
   @override
   late final GeneratedColumn<int> botLevel = GeneratedColumn<int>(
-    'bot_level',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+      'bot_level', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _timeControlSecondsMeta =
       const VerificationMeta('timeControlSeconds');
   @override
   late final GeneratedColumn<int> timeControlSeconds = GeneratedColumn<int>(
-    'time_control_seconds',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _playedAtMeta = const VerificationMeta(
-    'playedAt',
-  );
+      'time_control_seconds', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _playedAtMeta =
+      const VerificationMeta('playedAt');
   @override
   late final GeneratedColumn<DateTime> playedAt = GeneratedColumn<DateTime>(
-    'played_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _playerAccuracyMeta = const VerificationMeta(
-    'playerAccuracy',
-  );
+      'played_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _playerAccuracyMeta =
+      const VerificationMeta('playerAccuracy');
   @override
   late final GeneratedColumn<int> playerAccuracy = GeneratedColumn<int>(
-    'player_accuracy',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _playerColorIndexMeta = const VerificationMeta(
-    'playerColorIndex',
-  );
+      'player_accuracy', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _playerColorIndexMeta =
+      const VerificationMeta('playerColorIndex');
   @override
   late final GeneratedColumn<int> playerColorIndex = GeneratedColumn<int>(
-    'player_color_index',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
+      'player_color_index', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    pgn,
-    result,
-    mode,
-    botLevel,
-    timeControlSeconds,
-    playedAt,
-    playerAccuracy,
-    playerColorIndex,
-  ];
+        id,
+        pgn,
+        result,
+        mode,
+        botLevel,
+        timeControlSeconds,
+        playedAt,
+        playerAccuracy,
+        playerColorIndex
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'games';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<Game> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<Game> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -132,68 +91,49 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
     }
     if (data.containsKey('pgn')) {
       context.handle(
-        _pgnMeta,
-        pgn.isAcceptableOrUnknown(data['pgn']!, _pgnMeta),
-      );
+          _pgnMeta, pgn.isAcceptableOrUnknown(data['pgn']!, _pgnMeta));
     } else if (isInserting) {
       context.missing(_pgnMeta);
     }
     if (data.containsKey('result')) {
-      context.handle(
-        _resultMeta,
-        result.isAcceptableOrUnknown(data['result']!, _resultMeta),
-      );
+      context.handle(_resultMeta,
+          result.isAcceptableOrUnknown(data['result']!, _resultMeta));
     } else if (isInserting) {
       context.missing(_resultMeta);
     }
     if (data.containsKey('mode')) {
       context.handle(
-        _modeMeta,
-        mode.isAcceptableOrUnknown(data['mode']!, _modeMeta),
-      );
+          _modeMeta, mode.isAcceptableOrUnknown(data['mode']!, _modeMeta));
     } else if (isInserting) {
       context.missing(_modeMeta);
     }
     if (data.containsKey('bot_level')) {
-      context.handle(
-        _botLevelMeta,
-        botLevel.isAcceptableOrUnknown(data['bot_level']!, _botLevelMeta),
-      );
+      context.handle(_botLevelMeta,
+          botLevel.isAcceptableOrUnknown(data['bot_level']!, _botLevelMeta));
     }
     if (data.containsKey('time_control_seconds')) {
       context.handle(
-        _timeControlSecondsMeta,
-        timeControlSeconds.isAcceptableOrUnknown(
-          data['time_control_seconds']!,
           _timeControlSecondsMeta,
-        ),
-      );
+          timeControlSeconds.isAcceptableOrUnknown(
+              data['time_control_seconds']!, _timeControlSecondsMeta));
     }
     if (data.containsKey('played_at')) {
-      context.handle(
-        _playedAtMeta,
-        playedAt.isAcceptableOrUnknown(data['played_at']!, _playedAtMeta),
-      );
+      context.handle(_playedAtMeta,
+          playedAt.isAcceptableOrUnknown(data['played_at']!, _playedAtMeta));
     } else if (isInserting) {
       context.missing(_playedAtMeta);
     }
     if (data.containsKey('player_accuracy')) {
       context.handle(
-        _playerAccuracyMeta,
-        playerAccuracy.isAcceptableOrUnknown(
-          data['player_accuracy']!,
           _playerAccuracyMeta,
-        ),
-      );
+          playerAccuracy.isAcceptableOrUnknown(
+              data['player_accuracy']!, _playerAccuracyMeta));
     }
     if (data.containsKey('player_color_index')) {
       context.handle(
-        _playerColorIndexMeta,
-        playerColorIndex.isAcceptableOrUnknown(
-          data['player_color_index']!,
           _playerColorIndexMeta,
-        ),
-      );
+          playerColorIndex.isAcceptableOrUnknown(
+              data['player_color_index']!, _playerColorIndexMeta));
     }
     return context;
   }
@@ -204,42 +144,24 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
   Game map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Game(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      pgn: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}pgn'],
-      )!,
-      result: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}result'],
-      )!,
-      mode: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mode'],
-      )!,
-      botLevel: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}bot_level'],
-      ),
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      pgn: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}pgn'])!,
+      result: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}result'])!,
+      mode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mode'])!,
+      botLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}bot_level']),
       timeControlSeconds: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}time_control_seconds'],
-      ),
-      playedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}played_at'],
-      )!,
-      playerAccuracy: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}player_accuracy'],
-      ),
+          DriftSqlType.int, data['${effectivePrefix}time_control_seconds']),
+      playedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}played_at'])!,
+      playerAccuracy: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_accuracy']),
       playerColorIndex: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}player_color_index'],
-      )!,
+          DriftSqlType.int, data['${effectivePrefix}player_color_index'])!,
     );
   }
 
@@ -259,17 +181,16 @@ class Game extends DataClass implements Insertable<Game> {
   final DateTime playedAt;
   final int? playerAccuracy;
   final int playerColorIndex;
-  const Game({
-    required this.id,
-    required this.pgn,
-    required this.result,
-    required this.mode,
-    this.botLevel,
-    this.timeControlSeconds,
-    required this.playedAt,
-    this.playerAccuracy,
-    required this.playerColorIndex,
-  });
+  const Game(
+      {required this.id,
+      required this.pgn,
+      required this.result,
+      required this.mode,
+      this.botLevel,
+      this.timeControlSeconds,
+      required this.playedAt,
+      this.playerAccuracy,
+      required this.playerColorIndex});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -311,10 +232,8 @@ class Game extends DataClass implements Insertable<Game> {
     );
   }
 
-  factory Game.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory Game.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Game(
       id: serializer.fromJson<int>(json['id']),
@@ -344,31 +263,30 @@ class Game extends DataClass implements Insertable<Game> {
     };
   }
 
-  Game copyWith({
-    int? id,
-    String? pgn,
-    String? result,
-    String? mode,
-    Value<int?> botLevel = const Value.absent(),
-    Value<int?> timeControlSeconds = const Value.absent(),
-    DateTime? playedAt,
-    Value<int?> playerAccuracy = const Value.absent(),
-    int? playerColorIndex,
-  }) => Game(
-    id: id ?? this.id,
-    pgn: pgn ?? this.pgn,
-    result: result ?? this.result,
-    mode: mode ?? this.mode,
-    botLevel: botLevel.present ? botLevel.value : this.botLevel,
-    timeControlSeconds: timeControlSeconds.present
-        ? timeControlSeconds.value
-        : this.timeControlSeconds,
-    playedAt: playedAt ?? this.playedAt,
-    playerAccuracy: playerAccuracy.present
-        ? playerAccuracy.value
-        : this.playerAccuracy,
-    playerColorIndex: playerColorIndex ?? this.playerColorIndex,
-  );
+  Game copyWith(
+          {int? id,
+          String? pgn,
+          String? result,
+          String? mode,
+          Value<int?> botLevel = const Value.absent(),
+          Value<int?> timeControlSeconds = const Value.absent(),
+          DateTime? playedAt,
+          Value<int?> playerAccuracy = const Value.absent(),
+          int? playerColorIndex}) =>
+      Game(
+        id: id ?? this.id,
+        pgn: pgn ?? this.pgn,
+        result: result ?? this.result,
+        mode: mode ?? this.mode,
+        botLevel: botLevel.present ? botLevel.value : this.botLevel,
+        timeControlSeconds: timeControlSeconds.present
+            ? timeControlSeconds.value
+            : this.timeControlSeconds,
+        playedAt: playedAt ?? this.playedAt,
+        playerAccuracy:
+            playerAccuracy.present ? playerAccuracy.value : this.playerAccuracy,
+        playerColorIndex: playerColorIndex ?? this.playerColorIndex,
+      );
   Game copyWithCompanion(GamesCompanion data) {
     return Game(
       id: data.id.present ? data.id.value : this.id,
@@ -406,17 +324,8 @@ class Game extends DataClass implements Insertable<Game> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    pgn,
-    result,
-    mode,
-    botLevel,
-    timeControlSeconds,
-    playedAt,
-    playerAccuracy,
-    playerColorIndex,
-  );
+  int get hashCode => Object.hash(id, pgn, result, mode, botLevel,
+      timeControlSeconds, playedAt, playerAccuracy, playerColorIndex);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -463,10 +372,10 @@ class GamesCompanion extends UpdateCompanion<Game> {
     required DateTime playedAt,
     this.playerAccuracy = const Value.absent(),
     this.playerColorIndex = const Value.absent(),
-  }) : pgn = Value(pgn),
-       result = Value(result),
-       mode = Value(mode),
-       playedAt = Value(playedAt);
+  })  : pgn = Value(pgn),
+        result = Value(result),
+        mode = Value(mode),
+        playedAt = Value(playedAt);
   static Insertable<Game> custom({
     Expression<int>? id,
     Expression<String>? pgn,
@@ -492,17 +401,16 @@ class GamesCompanion extends UpdateCompanion<Game> {
     });
   }
 
-  GamesCompanion copyWith({
-    Value<int>? id,
-    Value<String>? pgn,
-    Value<String>? result,
-    Value<String>? mode,
-    Value<int?>? botLevel,
-    Value<int?>? timeControlSeconds,
-    Value<DateTime>? playedAt,
-    Value<int?>? playerAccuracy,
-    Value<int>? playerColorIndex,
-  }) {
+  GamesCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? pgn,
+      Value<String>? result,
+      Value<String>? mode,
+      Value<int?>? botLevel,
+      Value<int?>? timeControlSeconds,
+      Value<DateTime>? playedAt,
+      Value<int?>? playerAccuracy,
+      Value<int>? playerColorIndex}) {
     return GamesCompanion(
       id: id ?? this.id,
       pgn: pgn ?? this.pgn,
@@ -574,172 +482,110 @@ class $MovesTable extends Moves with TableInfo<$MovesTable, Move> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
   static const VerificationMeta _gameIdMeta = const VerificationMeta('gameId');
   @override
   late final GeneratedColumn<int> gameId = GeneratedColumn<int>(
-    'game_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES games (id)',
-    ),
-  );
+      'game_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES games (id)'));
   static const VerificationMeta _plyMeta = const VerificationMeta('ply');
   @override
   late final GeneratedColumn<int> ply = GeneratedColumn<int>(
-    'ply',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'ply', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _uciMeta = const VerificationMeta('uci');
   @override
   late final GeneratedColumn<String> uci = GeneratedColumn<String>(
-    'uci',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'uci', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _sanMeta = const VerificationMeta('san');
   @override
   late final GeneratedColumn<String> san = GeneratedColumn<String>(
-    'san',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _evalCentipawnsMeta = const VerificationMeta(
-    'evalCentipawns',
-  );
+      'san', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _evalCentipawnsMeta =
+      const VerificationMeta('evalCentipawns');
   @override
   late final GeneratedColumn<int> evalCentipawns = GeneratedColumn<int>(
-    'eval_centipawns',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _classificationMeta = const VerificationMeta(
-    'classification',
-  );
+      'eval_centipawns', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _classificationMeta =
+      const VerificationMeta('classification');
   @override
   late final GeneratedColumn<String> classification = GeneratedColumn<String>(
-    'classification',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _bestMoveUciMeta = const VerificationMeta(
-    'bestMoveUci',
-  );
+      'classification', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _bestMoveUciMeta =
+      const VerificationMeta('bestMoveUci');
   @override
   late final GeneratedColumn<String> bestMoveUci = GeneratedColumn<String>(
-    'best_move_uci',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
+      'best_move_uci', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    gameId,
-    ply,
-    uci,
-    san,
-    evalCentipawns,
-    classification,
-    bestMoveUci,
-  ];
+  List<GeneratedColumn> get $columns =>
+      [id, gameId, ply, uci, san, evalCentipawns, classification, bestMoveUci];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'moves';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<Move> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<Move> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('game_id')) {
-      context.handle(
-        _gameIdMeta,
-        gameId.isAcceptableOrUnknown(data['game_id']!, _gameIdMeta),
-      );
+      context.handle(_gameIdMeta,
+          gameId.isAcceptableOrUnknown(data['game_id']!, _gameIdMeta));
     } else if (isInserting) {
       context.missing(_gameIdMeta);
     }
     if (data.containsKey('ply')) {
       context.handle(
-        _plyMeta,
-        ply.isAcceptableOrUnknown(data['ply']!, _plyMeta),
-      );
+          _plyMeta, ply.isAcceptableOrUnknown(data['ply']!, _plyMeta));
     } else if (isInserting) {
       context.missing(_plyMeta);
     }
     if (data.containsKey('uci')) {
       context.handle(
-        _uciMeta,
-        uci.isAcceptableOrUnknown(data['uci']!, _uciMeta),
-      );
+          _uciMeta, uci.isAcceptableOrUnknown(data['uci']!, _uciMeta));
     } else if (isInserting) {
       context.missing(_uciMeta);
     }
     if (data.containsKey('san')) {
       context.handle(
-        _sanMeta,
-        san.isAcceptableOrUnknown(data['san']!, _sanMeta),
-      );
+          _sanMeta, san.isAcceptableOrUnknown(data['san']!, _sanMeta));
     } else if (isInserting) {
       context.missing(_sanMeta);
     }
     if (data.containsKey('eval_centipawns')) {
       context.handle(
-        _evalCentipawnsMeta,
-        evalCentipawns.isAcceptableOrUnknown(
-          data['eval_centipawns']!,
           _evalCentipawnsMeta,
-        ),
-      );
+          evalCentipawns.isAcceptableOrUnknown(
+              data['eval_centipawns']!, _evalCentipawnsMeta));
     }
     if (data.containsKey('classification')) {
       context.handle(
-        _classificationMeta,
-        classification.isAcceptableOrUnknown(
-          data['classification']!,
           _classificationMeta,
-        ),
-      );
+          classification.isAcceptableOrUnknown(
+              data['classification']!, _classificationMeta));
     }
     if (data.containsKey('best_move_uci')) {
       context.handle(
-        _bestMoveUciMeta,
-        bestMoveUci.isAcceptableOrUnknown(
-          data['best_move_uci']!,
           _bestMoveUciMeta,
-        ),
-      );
+          bestMoveUci.isAcceptableOrUnknown(
+              data['best_move_uci']!, _bestMoveUciMeta));
     }
     return context;
   }
@@ -750,38 +596,22 @@ class $MovesTable extends Moves with TableInfo<$MovesTable, Move> {
   Move map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Move(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      gameId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}game_id'],
-      )!,
-      ply: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}ply'],
-      )!,
-      uci: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}uci'],
-      )!,
-      san: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}san'],
-      )!,
-      evalCentipawns: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}eval_centipawns'],
-      ),
-      classification: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}classification'],
-      ),
-      bestMoveUci: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}best_move_uci'],
-      ),
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      gameId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}game_id'])!,
+      ply: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ply'])!,
+      uci: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uci'])!,
+      san: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}san'])!,
+      evalCentipawns: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}eval_centipawns']),
+      classification: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}classification']),
+      bestMoveUci: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}best_move_uci']),
     );
   }
 
@@ -800,16 +630,15 @@ class Move extends DataClass implements Insertable<Move> {
   final int? evalCentipawns;
   final String? classification;
   final String? bestMoveUci;
-  const Move({
-    required this.id,
-    required this.gameId,
-    required this.ply,
-    required this.uci,
-    required this.san,
-    this.evalCentipawns,
-    this.classification,
-    this.bestMoveUci,
-  });
+  const Move(
+      {required this.id,
+      required this.gameId,
+      required this.ply,
+      required this.uci,
+      required this.san,
+      this.evalCentipawns,
+      this.classification,
+      this.bestMoveUci});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -849,10 +678,8 @@ class Move extends DataClass implements Insertable<Move> {
     );
   }
 
-  factory Move.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory Move.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Move(
       id: serializer.fromJson<int>(json['id']),
@@ -880,29 +707,27 @@ class Move extends DataClass implements Insertable<Move> {
     };
   }
 
-  Move copyWith({
-    int? id,
-    int? gameId,
-    int? ply,
-    String? uci,
-    String? san,
-    Value<int?> evalCentipawns = const Value.absent(),
-    Value<String?> classification = const Value.absent(),
-    Value<String?> bestMoveUci = const Value.absent(),
-  }) => Move(
-    id: id ?? this.id,
-    gameId: gameId ?? this.gameId,
-    ply: ply ?? this.ply,
-    uci: uci ?? this.uci,
-    san: san ?? this.san,
-    evalCentipawns: evalCentipawns.present
-        ? evalCentipawns.value
-        : this.evalCentipawns,
-    classification: classification.present
-        ? classification.value
-        : this.classification,
-    bestMoveUci: bestMoveUci.present ? bestMoveUci.value : this.bestMoveUci,
-  );
+  Move copyWith(
+          {int? id,
+          int? gameId,
+          int? ply,
+          String? uci,
+          String? san,
+          Value<int?> evalCentipawns = const Value.absent(),
+          Value<String?> classification = const Value.absent(),
+          Value<String?> bestMoveUci = const Value.absent()}) =>
+      Move(
+        id: id ?? this.id,
+        gameId: gameId ?? this.gameId,
+        ply: ply ?? this.ply,
+        uci: uci ?? this.uci,
+        san: san ?? this.san,
+        evalCentipawns:
+            evalCentipawns.present ? evalCentipawns.value : this.evalCentipawns,
+        classification:
+            classification.present ? classification.value : this.classification,
+        bestMoveUci: bestMoveUci.present ? bestMoveUci.value : this.bestMoveUci,
+      );
   Move copyWithCompanion(MovesCompanion data) {
     return Move(
       id: data.id.present ? data.id.value : this.id,
@@ -916,9 +741,8 @@ class Move extends DataClass implements Insertable<Move> {
       classification: data.classification.present
           ? data.classification.value
           : this.classification,
-      bestMoveUci: data.bestMoveUci.present
-          ? data.bestMoveUci.value
-          : this.bestMoveUci,
+      bestMoveUci:
+          data.bestMoveUci.present ? data.bestMoveUci.value : this.bestMoveUci,
     );
   }
 
@@ -939,15 +763,7 @@ class Move extends DataClass implements Insertable<Move> {
 
   @override
   int get hashCode => Object.hash(
-    id,
-    gameId,
-    ply,
-    uci,
-    san,
-    evalCentipawns,
-    classification,
-    bestMoveUci,
-  );
+      id, gameId, ply, uci, san, evalCentipawns, classification, bestMoveUci);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -990,10 +806,10 @@ class MovesCompanion extends UpdateCompanion<Move> {
     this.evalCentipawns = const Value.absent(),
     this.classification = const Value.absent(),
     this.bestMoveUci = const Value.absent(),
-  }) : gameId = Value(gameId),
-       ply = Value(ply),
-       uci = Value(uci),
-       san = Value(san);
+  })  : gameId = Value(gameId),
+        ply = Value(ply),
+        uci = Value(uci),
+        san = Value(san);
   static Insertable<Move> custom({
     Expression<int>? id,
     Expression<int>? gameId,
@@ -1016,16 +832,15 @@ class MovesCompanion extends UpdateCompanion<Move> {
     });
   }
 
-  MovesCompanion copyWith({
-    Value<int>? id,
-    Value<int>? gameId,
-    Value<int>? ply,
-    Value<String>? uci,
-    Value<String>? san,
-    Value<int?>? evalCentipawns,
-    Value<String?>? classification,
-    Value<String?>? bestMoveUci,
-  }) {
+  MovesCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? gameId,
+      Value<int>? ply,
+      Value<String>? uci,
+      Value<String>? san,
+      Value<int?>? evalCentipawns,
+      Value<String?>? classification,
+      Value<String?>? bestMoveUci}) {
     return MovesCompanion(
       id: id ?? this.id,
       gameId: gameId ?? this.gameId,
@@ -1092,203 +907,146 @@ class $ProfileTable extends Profile with TableInfo<$ProfileTable, ProfileData> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _usernameMeta = const VerificationMeta(
-    'username',
-  );
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _usernameMeta =
+      const VerificationMeta('username');
   @override
   late final GeneratedColumn<String> username = GeneratedColumn<String>(
-    'username',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('Player'),
-  );
-  static const VerificationMeta _avatarPathMeta = const VerificationMeta(
-    'avatarPath',
-  );
+      'username', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Player'));
+  static const VerificationMeta _avatarPathMeta =
+      const VerificationMeta('avatarPath');
   @override
   late final GeneratedColumn<String> avatarPath = GeneratedColumn<String>(
-    'avatar_path',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _currentRatingMeta = const VerificationMeta(
-    'currentRating',
-  );
+      'avatar_path', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _currentRatingMeta =
+      const VerificationMeta('currentRating');
   @override
   late final GeneratedColumn<int> currentRating = GeneratedColumn<int>(
-    'current_rating',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(800),
-  );
-  static const VerificationMeta _peakRatingMeta = const VerificationMeta(
-    'peakRating',
-  );
+      'current_rating', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(800));
+  static const VerificationMeta _peakRatingMeta =
+      const VerificationMeta('peakRating');
   @override
   late final GeneratedColumn<int> peakRating = GeneratedColumn<int>(
-    'peak_rating',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(800),
-  );
-  static const VerificationMeta _gamesPlayedMeta = const VerificationMeta(
-    'gamesPlayed',
-  );
+      'peak_rating', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(800));
+  static const VerificationMeta _gamesPlayedMeta =
+      const VerificationMeta('gamesPlayed');
   @override
   late final GeneratedColumn<int> gamesPlayed = GeneratedColumn<int>(
-    'games_played',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
+      'games_played', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _winsMeta = const VerificationMeta('wins');
   @override
   late final GeneratedColumn<int> wins = GeneratedColumn<int>(
-    'wins',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
+      'wins', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _drawsMeta = const VerificationMeta('draws');
   @override
   late final GeneratedColumn<int> draws = GeneratedColumn<int>(
-    'draws',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
+      'draws', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _lossesMeta = const VerificationMeta('losses');
   @override
   late final GeneratedColumn<int> losses = GeneratedColumn<int>(
-    'losses',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+      'losses', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    username,
-    avatarPath,
-    currentRating,
-    peakRating,
-    gamesPlayed,
-    wins,
-    draws,
-    losses,
-    createdAt,
-  ];
+        id,
+        username,
+        avatarPath,
+        currentRating,
+        peakRating,
+        gamesPlayed,
+        wins,
+        draws,
+        losses,
+        createdAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'profile';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ProfileData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ProfileData> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('username')) {
-      context.handle(
-        _usernameMeta,
-        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
-      );
+      context.handle(_usernameMeta,
+          username.isAcceptableOrUnknown(data['username']!, _usernameMeta));
     }
     if (data.containsKey('avatar_path')) {
       context.handle(
-        _avatarPathMeta,
-        avatarPath.isAcceptableOrUnknown(data['avatar_path']!, _avatarPathMeta),
-      );
+          _avatarPathMeta,
+          avatarPath.isAcceptableOrUnknown(
+              data['avatar_path']!, _avatarPathMeta));
     }
     if (data.containsKey('current_rating')) {
       context.handle(
-        _currentRatingMeta,
-        currentRating.isAcceptableOrUnknown(
-          data['current_rating']!,
           _currentRatingMeta,
-        ),
-      );
+          currentRating.isAcceptableOrUnknown(
+              data['current_rating']!, _currentRatingMeta));
     }
     if (data.containsKey('peak_rating')) {
       context.handle(
-        _peakRatingMeta,
-        peakRating.isAcceptableOrUnknown(data['peak_rating']!, _peakRatingMeta),
-      );
+          _peakRatingMeta,
+          peakRating.isAcceptableOrUnknown(
+              data['peak_rating']!, _peakRatingMeta));
     }
     if (data.containsKey('games_played')) {
       context.handle(
-        _gamesPlayedMeta,
-        gamesPlayed.isAcceptableOrUnknown(
-          data['games_played']!,
           _gamesPlayedMeta,
-        ),
-      );
+          gamesPlayed.isAcceptableOrUnknown(
+              data['games_played']!, _gamesPlayedMeta));
     }
     if (data.containsKey('wins')) {
       context.handle(
-        _winsMeta,
-        wins.isAcceptableOrUnknown(data['wins']!, _winsMeta),
-      );
+          _winsMeta, wins.isAcceptableOrUnknown(data['wins']!, _winsMeta));
     }
     if (data.containsKey('draws')) {
       context.handle(
-        _drawsMeta,
-        draws.isAcceptableOrUnknown(data['draws']!, _drawsMeta),
-      );
+          _drawsMeta, draws.isAcceptableOrUnknown(data['draws']!, _drawsMeta));
     }
     if (data.containsKey('losses')) {
-      context.handle(
-        _lossesMeta,
-        losses.isAcceptableOrUnknown(data['losses']!, _lossesMeta),
-      );
+      context.handle(_lossesMeta,
+          losses.isAcceptableOrUnknown(data['losses']!, _lossesMeta));
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
@@ -1301,46 +1059,26 @@ class $ProfileTable extends Profile with TableInfo<$ProfileTable, ProfileData> {
   ProfileData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ProfileData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      username: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}username'],
-      )!,
-      avatarPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}avatar_path'],
-      ),
-      currentRating: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}current_rating'],
-      )!,
-      peakRating: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}peak_rating'],
-      )!,
-      gamesPlayed: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}games_played'],
-      )!,
-      wins: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}wins'],
-      )!,
-      draws: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}draws'],
-      )!,
-      losses: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}losses'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      username: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}username'])!,
+      avatarPath: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}avatar_path']),
+      currentRating: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}current_rating'])!,
+      peakRating: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}peak_rating'])!,
+      gamesPlayed: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}games_played'])!,
+      wins: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}wins'])!,
+      draws: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}draws'])!,
+      losses: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}losses'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
   }
 
@@ -1361,18 +1099,17 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
   final int draws;
   final int losses;
   final DateTime createdAt;
-  const ProfileData({
-    required this.id,
-    required this.username,
-    this.avatarPath,
-    required this.currentRating,
-    required this.peakRating,
-    required this.gamesPlayed,
-    required this.wins,
-    required this.draws,
-    required this.losses,
-    required this.createdAt,
-  });
+  const ProfileData(
+      {required this.id,
+      required this.username,
+      this.avatarPath,
+      required this.currentRating,
+      required this.peakRating,
+      required this.gamesPlayed,
+      required this.wins,
+      required this.draws,
+      required this.losses,
+      required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1408,10 +1145,8 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     );
   }
 
-  factory ProfileData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ProfileData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ProfileData(
       id: serializer.fromJson<int>(json['id']),
@@ -1443,45 +1178,42 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     };
   }
 
-  ProfileData copyWith({
-    int? id,
-    String? username,
-    Value<String?> avatarPath = const Value.absent(),
-    int? currentRating,
-    int? peakRating,
-    int? gamesPlayed,
-    int? wins,
-    int? draws,
-    int? losses,
-    DateTime? createdAt,
-  }) => ProfileData(
-    id: id ?? this.id,
-    username: username ?? this.username,
-    avatarPath: avatarPath.present ? avatarPath.value : this.avatarPath,
-    currentRating: currentRating ?? this.currentRating,
-    peakRating: peakRating ?? this.peakRating,
-    gamesPlayed: gamesPlayed ?? this.gamesPlayed,
-    wins: wins ?? this.wins,
-    draws: draws ?? this.draws,
-    losses: losses ?? this.losses,
-    createdAt: createdAt ?? this.createdAt,
-  );
+  ProfileData copyWith(
+          {int? id,
+          String? username,
+          Value<String?> avatarPath = const Value.absent(),
+          int? currentRating,
+          int? peakRating,
+          int? gamesPlayed,
+          int? wins,
+          int? draws,
+          int? losses,
+          DateTime? createdAt}) =>
+      ProfileData(
+        id: id ?? this.id,
+        username: username ?? this.username,
+        avatarPath: avatarPath.present ? avatarPath.value : this.avatarPath,
+        currentRating: currentRating ?? this.currentRating,
+        peakRating: peakRating ?? this.peakRating,
+        gamesPlayed: gamesPlayed ?? this.gamesPlayed,
+        wins: wins ?? this.wins,
+        draws: draws ?? this.draws,
+        losses: losses ?? this.losses,
+        createdAt: createdAt ?? this.createdAt,
+      );
   ProfileData copyWithCompanion(ProfileCompanion data) {
     return ProfileData(
       id: data.id.present ? data.id.value : this.id,
       username: data.username.present ? data.username.value : this.username,
-      avatarPath: data.avatarPath.present
-          ? data.avatarPath.value
-          : this.avatarPath,
+      avatarPath:
+          data.avatarPath.present ? data.avatarPath.value : this.avatarPath,
       currentRating: data.currentRating.present
           ? data.currentRating.value
           : this.currentRating,
-      peakRating: data.peakRating.present
-          ? data.peakRating.value
-          : this.peakRating,
-      gamesPlayed: data.gamesPlayed.present
-          ? data.gamesPlayed.value
-          : this.gamesPlayed,
+      peakRating:
+          data.peakRating.present ? data.peakRating.value : this.peakRating,
+      gamesPlayed:
+          data.gamesPlayed.present ? data.gamesPlayed.value : this.gamesPlayed,
       wins: data.wins.present ? data.wins.value : this.wins,
       draws: data.draws.present ? data.draws.value : this.draws,
       losses: data.losses.present ? data.losses.value : this.losses,
@@ -1507,18 +1239,8 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    username,
-    avatarPath,
-    currentRating,
-    peakRating,
-    gamesPlayed,
-    wins,
-    draws,
-    losses,
-    createdAt,
-  );
+  int get hashCode => Object.hash(id, username, avatarPath, currentRating,
+      peakRating, gamesPlayed, wins, draws, losses, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1596,18 +1318,17 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
     });
   }
 
-  ProfileCompanion copyWith({
-    Value<int>? id,
-    Value<String>? username,
-    Value<String?>? avatarPath,
-    Value<int>? currentRating,
-    Value<int>? peakRating,
-    Value<int>? gamesPlayed,
-    Value<int>? wins,
-    Value<int>? draws,
-    Value<int>? losses,
-    Value<DateTime>? createdAt,
-  }) {
+  ProfileCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? username,
+      Value<String?>? avatarPath,
+      Value<int>? currentRating,
+      Value<int>? peakRating,
+      Value<int>? gamesPlayed,
+      Value<int>? wins,
+      Value<int>? draws,
+      Value<int>? losses,
+      Value<DateTime>? createdAt}) {
     return ProfileCompanion(
       id: id ?? this.id,
       username: username ?? this.username,
@@ -1689,52 +1410,45 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [games, moves, profile];
 }
 
-typedef $$GamesTableCreateCompanionBuilder =
-    GamesCompanion Function({
-      Value<int> id,
-      required String pgn,
-      required String result,
-      required String mode,
-      Value<int?> botLevel,
-      Value<int?> timeControlSeconds,
-      required DateTime playedAt,
-      Value<int?> playerAccuracy,
-      Value<int> playerColorIndex,
-    });
-typedef $$GamesTableUpdateCompanionBuilder =
-    GamesCompanion Function({
-      Value<int> id,
-      Value<String> pgn,
-      Value<String> result,
-      Value<String> mode,
-      Value<int?> botLevel,
-      Value<int?> timeControlSeconds,
-      Value<DateTime> playedAt,
-      Value<int?> playerAccuracy,
-      Value<int> playerColorIndex,
-    });
+typedef $$GamesTableCreateCompanionBuilder = GamesCompanion Function({
+  Value<int> id,
+  required String pgn,
+  required String result,
+  required String mode,
+  Value<int?> botLevel,
+  Value<int?> timeControlSeconds,
+  required DateTime playedAt,
+  Value<int?> playerAccuracy,
+  Value<int> playerColorIndex,
+});
+typedef $$GamesTableUpdateCompanionBuilder = GamesCompanion Function({
+  Value<int> id,
+  Value<String> pgn,
+  Value<String> result,
+  Value<String> mode,
+  Value<int?> botLevel,
+  Value<int?> timeControlSeconds,
+  Value<DateTime> playedAt,
+  Value<int?> playerAccuracy,
+  Value<int> playerColorIndex,
+});
 
 final class $$GamesTableReferences
     extends BaseReferences<_$AppDatabase, $GamesTable, Game> {
   $$GamesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$MovesTable, List<Move>> _movesRefsTable(
-    _$AppDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.moves,
-    aliasName: $_aliasNameGenerator(db.games.id, db.moves.gameId),
-  );
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.moves,
+          aliasName: $_aliasNameGenerator(db.games.id, db.moves.gameId));
 
   $$MovesTableProcessedTableManager get movesRefs {
-    final manager = $$MovesTableTableManager(
-      $_db,
-      $_db.moves,
-    ).filter((f) => f.gameId.id.sqlEquals($_itemColumn<int>('id')!));
+    final manager = $$MovesTableTableManager($_db, $_db.moves)
+        .filter((f) => f.gameId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_movesRefsTable($_db));
     return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+        manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
@@ -1747,72 +1461,53 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get pgn => $composableBuilder(
-    column: $table.pgn,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.pgn, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get result => $composableBuilder(
-    column: $table.result,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.result, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get mode => $composableBuilder(
-    column: $table.mode,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.mode, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get botLevel => $composableBuilder(
-    column: $table.botLevel,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.botLevel, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get timeControlSeconds => $composableBuilder(
-    column: $table.timeControlSeconds,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.timeControlSeconds,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get playedAt => $composableBuilder(
-    column: $table.playedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.playedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get playerAccuracy => $composableBuilder(
-    column: $table.playerAccuracy,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.playerAccuracy,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get playerColorIndex => $composableBuilder(
-    column: $table.playerColorIndex,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.playerColorIndex,
+      builder: (column) => ColumnFilters(column));
 
   Expression<bool> movesRefs(
-    Expression<bool> Function($$MovesTableFilterComposer f) f,
-  ) {
+      Expression<bool> Function($$MovesTableFilterComposer f) f) {
     final $$MovesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.moves,
-      getReferencedColumn: (t) => t.gameId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$MovesTableFilterComposer(
-            $db: $db,
-            $table: $db.moves,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.moves,
+        getReferencedColumn: (t) => t.gameId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MovesTableFilterComposer(
+              $db: $db,
+              $table: $db.moves,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
@@ -1827,49 +1522,34 @@ class $$GamesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get pgn => $composableBuilder(
-    column: $table.pgn,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.pgn, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get result => $composableBuilder(
-    column: $table.result,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.result, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get mode => $composableBuilder(
-    column: $table.mode,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.mode, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get botLevel => $composableBuilder(
-    column: $table.botLevel,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.botLevel, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get timeControlSeconds => $composableBuilder(
-    column: $table.timeControlSeconds,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.timeControlSeconds,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get playedAt => $composableBuilder(
-    column: $table.playedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.playedAt, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get playerAccuracy => $composableBuilder(
-    column: $table.playerAccuracy,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.playerAccuracy,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get playerColorIndex => $composableBuilder(
-    column: $table.playerColorIndex,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.playerColorIndex,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$GamesTableAnnotationComposer
@@ -1897,67 +1577,53 @@ class $$GamesTableAnnotationComposer
       $composableBuilder(column: $table.botLevel, builder: (column) => column);
 
   GeneratedColumn<int> get timeControlSeconds => $composableBuilder(
-    column: $table.timeControlSeconds,
-    builder: (column) => column,
-  );
+      column: $table.timeControlSeconds, builder: (column) => column);
 
   GeneratedColumn<DateTime> get playedAt =>
       $composableBuilder(column: $table.playedAt, builder: (column) => column);
 
   GeneratedColumn<int> get playerAccuracy => $composableBuilder(
-    column: $table.playerAccuracy,
-    builder: (column) => column,
-  );
+      column: $table.playerAccuracy, builder: (column) => column);
 
   GeneratedColumn<int> get playerColorIndex => $composableBuilder(
-    column: $table.playerColorIndex,
-    builder: (column) => column,
-  );
+      column: $table.playerColorIndex, builder: (column) => column);
 
   Expression<T> movesRefs<T extends Object>(
-    Expression<T> Function($$MovesTableAnnotationComposer a) f,
-  ) {
+      Expression<T> Function($$MovesTableAnnotationComposer a) f) {
     final $$MovesTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.moves,
-      getReferencedColumn: (t) => t.gameId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$MovesTableAnnotationComposer(
-            $db: $db,
-            $table: $db.moves,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.moves,
+        getReferencedColumn: (t) => t.gameId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MovesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.moves,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
 
-class $$GamesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $GamesTable,
-          Game,
-          $$GamesTableFilterComposer,
-          $$GamesTableOrderingComposer,
-          $$GamesTableAnnotationComposer,
-          $$GamesTableCreateCompanionBuilder,
-          $$GamesTableUpdateCompanionBuilder,
-          (Game, $$GamesTableReferences),
-          Game,
-          PrefetchHooks Function({bool movesRefs})
-        > {
+class $$GamesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $GamesTable,
+    Game,
+    $$GamesTableFilterComposer,
+    $$GamesTableOrderingComposer,
+    $$GamesTableAnnotationComposer,
+    $$GamesTableCreateCompanionBuilder,
+    $$GamesTableUpdateCompanionBuilder,
+    (Game, $$GamesTableReferences),
+    Game,
+    PrefetchHooks Function({bool movesRefs})> {
   $$GamesTableTableManager(_$AppDatabase db, $GamesTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -1966,55 +1632,53 @@ class $$GamesTableTableManager
               $$GamesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$GamesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> pgn = const Value.absent(),
-                Value<String> result = const Value.absent(),
-                Value<String> mode = const Value.absent(),
-                Value<int?> botLevel = const Value.absent(),
-                Value<int?> timeControlSeconds = const Value.absent(),
-                Value<DateTime> playedAt = const Value.absent(),
-                Value<int?> playerAccuracy = const Value.absent(),
-                Value<int> playerColorIndex = const Value.absent(),
-              }) => GamesCompanion(
-                id: id,
-                pgn: pgn,
-                result: result,
-                mode: mode,
-                botLevel: botLevel,
-                timeControlSeconds: timeControlSeconds,
-                playedAt: playedAt,
-                playerAccuracy: playerAccuracy,
-                playerColorIndex: playerColorIndex,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String pgn,
-                required String result,
-                required String mode,
-                Value<int?> botLevel = const Value.absent(),
-                Value<int?> timeControlSeconds = const Value.absent(),
-                required DateTime playedAt,
-                Value<int?> playerAccuracy = const Value.absent(),
-                Value<int> playerColorIndex = const Value.absent(),
-              }) => GamesCompanion.insert(
-                id: id,
-                pgn: pgn,
-                result: result,
-                mode: mode,
-                botLevel: botLevel,
-                timeControlSeconds: timeControlSeconds,
-                playedAt: playedAt,
-                playerAccuracy: playerAccuracy,
-                playerColorIndex: playerColorIndex,
-              ),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> pgn = const Value.absent(),
+            Value<String> result = const Value.absent(),
+            Value<String> mode = const Value.absent(),
+            Value<int?> botLevel = const Value.absent(),
+            Value<int?> timeControlSeconds = const Value.absent(),
+            Value<DateTime> playedAt = const Value.absent(),
+            Value<int?> playerAccuracy = const Value.absent(),
+            Value<int> playerColorIndex = const Value.absent(),
+          }) =>
+              GamesCompanion(
+            id: id,
+            pgn: pgn,
+            result: result,
+            mode: mode,
+            botLevel: botLevel,
+            timeControlSeconds: timeControlSeconds,
+            playedAt: playedAt,
+            playerAccuracy: playerAccuracy,
+            playerColorIndex: playerColorIndex,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String pgn,
+            required String result,
+            required String mode,
+            Value<int?> botLevel = const Value.absent(),
+            Value<int?> timeControlSeconds = const Value.absent(),
+            required DateTime playedAt,
+            Value<int?> playerAccuracy = const Value.absent(),
+            Value<int> playerColorIndex = const Value.absent(),
+          }) =>
+              GamesCompanion.insert(
+            id: id,
+            pgn: pgn,
+            result: result,
+            mode: mode,
+            botLevel: botLevel,
+            timeControlSeconds: timeControlSeconds,
+            playedAt: playedAt,
+            playerAccuracy: playerAccuracy,
+            playerColorIndex: playerColorIndex,
+          ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $$GamesTableReferences(db, table, e)),
-              )
+              .map((e) =>
+                  (e.readTable(table), $$GamesTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({movesRefs = false}) {
             return PrefetchHooks(
@@ -2025,60 +1689,54 @@ class $$GamesTableTableManager
                 return [
                   if (movesRefs)
                     await $_getPrefetchedData<Game, $GamesTable, Move>(
-                      currentTable: table,
-                      referencedTable: $$GamesTableReferences._movesRefsTable(
-                        db,
-                      ),
-                      managerFromTypedResult: (p0) =>
-                          $$GamesTableReferences(db, table, p0).movesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.gameId == item.id),
-                      typedResults: items,
-                    ),
+                        currentTable: table,
+                        referencedTable:
+                            $$GamesTableReferences._movesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$GamesTableReferences(db, table, p0).movesRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.gameId == item.id),
+                        typedResults: items)
                 ];
               },
             );
           },
-        ),
-      );
+        ));
 }
 
-typedef $$GamesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $GamesTable,
-      Game,
-      $$GamesTableFilterComposer,
-      $$GamesTableOrderingComposer,
-      $$GamesTableAnnotationComposer,
-      $$GamesTableCreateCompanionBuilder,
-      $$GamesTableUpdateCompanionBuilder,
-      (Game, $$GamesTableReferences),
-      Game,
-      PrefetchHooks Function({bool movesRefs})
-    >;
-typedef $$MovesTableCreateCompanionBuilder =
-    MovesCompanion Function({
-      Value<int> id,
-      required int gameId,
-      required int ply,
-      required String uci,
-      required String san,
-      Value<int?> evalCentipawns,
-      Value<String?> classification,
-      Value<String?> bestMoveUci,
-    });
-typedef $$MovesTableUpdateCompanionBuilder =
-    MovesCompanion Function({
-      Value<int> id,
-      Value<int> gameId,
-      Value<int> ply,
-      Value<String> uci,
-      Value<String> san,
-      Value<int?> evalCentipawns,
-      Value<String?> classification,
-      Value<String?> bestMoveUci,
-    });
+typedef $$GamesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $GamesTable,
+    Game,
+    $$GamesTableFilterComposer,
+    $$GamesTableOrderingComposer,
+    $$GamesTableAnnotationComposer,
+    $$GamesTableCreateCompanionBuilder,
+    $$GamesTableUpdateCompanionBuilder,
+    (Game, $$GamesTableReferences),
+    Game,
+    PrefetchHooks Function({bool movesRefs})>;
+typedef $$MovesTableCreateCompanionBuilder = MovesCompanion Function({
+  Value<int> id,
+  required int gameId,
+  required int ply,
+  required String uci,
+  required String san,
+  Value<int?> evalCentipawns,
+  Value<String?> classification,
+  Value<String?> bestMoveUci,
+});
+typedef $$MovesTableUpdateCompanionBuilder = MovesCompanion Function({
+  Value<int> id,
+  Value<int> gameId,
+  Value<int> ply,
+  Value<String> uci,
+  Value<String> san,
+  Value<int?> evalCentipawns,
+  Value<String?> classification,
+  Value<String?> bestMoveUci,
+});
 
 final class $$MovesTableReferences
     extends BaseReferences<_$AppDatabase, $MovesTable, Move> {
@@ -2090,15 +1748,12 @@ final class $$MovesTableReferences
   $$GamesTableProcessedTableManager get gameId {
     final $_column = $_itemColumn<int>('game_id')!;
 
-    final manager = $$GamesTableTableManager(
-      $_db,
-      $_db.games,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$GamesTableTableManager($_db, $_db.games)
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_gameIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+        manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -2111,60 +1766,45 @@ class $$MovesTableFilterComposer extends Composer<_$AppDatabase, $MovesTable> {
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get ply => $composableBuilder(
-    column: $table.ply,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.ply, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get uci => $composableBuilder(
-    column: $table.uci,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.uci, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get san => $composableBuilder(
-    column: $table.san,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.san, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get evalCentipawns => $composableBuilder(
-    column: $table.evalCentipawns,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.evalCentipawns,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get classification => $composableBuilder(
-    column: $table.classification,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.classification,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get bestMoveUci => $composableBuilder(
-    column: $table.bestMoveUci,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.bestMoveUci, builder: (column) => ColumnFilters(column));
 
   $$GamesTableFilterComposer get gameId {
     final $$GamesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.gameId,
-      referencedTable: $db.games,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$GamesTableFilterComposer(
-            $db: $db,
-            $table: $db.games,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.gameId,
+        referencedTable: $db.games,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GamesTableFilterComposer(
+              $db: $db,
+              $table: $db.games,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return composer;
   }
 }
@@ -2179,60 +1819,45 @@ class $$MovesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get ply => $composableBuilder(
-    column: $table.ply,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.ply, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get uci => $composableBuilder(
-    column: $table.uci,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.uci, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get san => $composableBuilder(
-    column: $table.san,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.san, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get evalCentipawns => $composableBuilder(
-    column: $table.evalCentipawns,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.evalCentipawns,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get classification => $composableBuilder(
-    column: $table.classification,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.classification,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get bestMoveUci => $composableBuilder(
-    column: $table.bestMoveUci,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.bestMoveUci, builder: (column) => ColumnOrderings(column));
 
   $$GamesTableOrderingComposer get gameId {
     final $$GamesTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.gameId,
-      referencedTable: $db.games,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$GamesTableOrderingComposer(
-            $db: $db,
-            $table: $db.games,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.gameId,
+        referencedTable: $db.games,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GamesTableOrderingComposer(
+              $db: $db,
+              $table: $db.games,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return composer;
   }
 }
@@ -2259,62 +1884,49 @@ class $$MovesTableAnnotationComposer
       $composableBuilder(column: $table.san, builder: (column) => column);
 
   GeneratedColumn<int> get evalCentipawns => $composableBuilder(
-    column: $table.evalCentipawns,
-    builder: (column) => column,
-  );
+      column: $table.evalCentipawns, builder: (column) => column);
 
   GeneratedColumn<String> get classification => $composableBuilder(
-    column: $table.classification,
-    builder: (column) => column,
-  );
+      column: $table.classification, builder: (column) => column);
 
   GeneratedColumn<String> get bestMoveUci => $composableBuilder(
-    column: $table.bestMoveUci,
-    builder: (column) => column,
-  );
+      column: $table.bestMoveUci, builder: (column) => column);
 
   $$GamesTableAnnotationComposer get gameId {
     final $$GamesTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.gameId,
-      referencedTable: $db.games,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$GamesTableAnnotationComposer(
-            $db: $db,
-            $table: $db.games,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.gameId,
+        referencedTable: $db.games,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GamesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.games,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return composer;
   }
 }
 
-class $$MovesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $MovesTable,
-          Move,
-          $$MovesTableFilterComposer,
-          $$MovesTableOrderingComposer,
-          $$MovesTableAnnotationComposer,
-          $$MovesTableCreateCompanionBuilder,
-          $$MovesTableUpdateCompanionBuilder,
-          (Move, $$MovesTableReferences),
-          Move,
-          PrefetchHooks Function({bool gameId})
-        > {
+class $$MovesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $MovesTable,
+    Move,
+    $$MovesTableFilterComposer,
+    $$MovesTableOrderingComposer,
+    $$MovesTableAnnotationComposer,
+    $$MovesTableCreateCompanionBuilder,
+    $$MovesTableUpdateCompanionBuilder,
+    (Move, $$MovesTableReferences),
+    Move,
+    PrefetchHooks Function({bool gameId})> {
   $$MovesTableTableManager(_$AppDatabase db, $MovesTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -2323,59 +1935,56 @@ class $$MovesTableTableManager
               $$MovesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$MovesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> gameId = const Value.absent(),
-                Value<int> ply = const Value.absent(),
-                Value<String> uci = const Value.absent(),
-                Value<String> san = const Value.absent(),
-                Value<int?> evalCentipawns = const Value.absent(),
-                Value<String?> classification = const Value.absent(),
-                Value<String?> bestMoveUci = const Value.absent(),
-              }) => MovesCompanion(
-                id: id,
-                gameId: gameId,
-                ply: ply,
-                uci: uci,
-                san: san,
-                evalCentipawns: evalCentipawns,
-                classification: classification,
-                bestMoveUci: bestMoveUci,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int gameId,
-                required int ply,
-                required String uci,
-                required String san,
-                Value<int?> evalCentipawns = const Value.absent(),
-                Value<String?> classification = const Value.absent(),
-                Value<String?> bestMoveUci = const Value.absent(),
-              }) => MovesCompanion.insert(
-                id: id,
-                gameId: gameId,
-                ply: ply,
-                uci: uci,
-                san: san,
-                evalCentipawns: evalCentipawns,
-                classification: classification,
-                bestMoveUci: bestMoveUci,
-              ),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> gameId = const Value.absent(),
+            Value<int> ply = const Value.absent(),
+            Value<String> uci = const Value.absent(),
+            Value<String> san = const Value.absent(),
+            Value<int?> evalCentipawns = const Value.absent(),
+            Value<String?> classification = const Value.absent(),
+            Value<String?> bestMoveUci = const Value.absent(),
+          }) =>
+              MovesCompanion(
+            id: id,
+            gameId: gameId,
+            ply: ply,
+            uci: uci,
+            san: san,
+            evalCentipawns: evalCentipawns,
+            classification: classification,
+            bestMoveUci: bestMoveUci,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int gameId,
+            required int ply,
+            required String uci,
+            required String san,
+            Value<int?> evalCentipawns = const Value.absent(),
+            Value<String?> classification = const Value.absent(),
+            Value<String?> bestMoveUci = const Value.absent(),
+          }) =>
+              MovesCompanion.insert(
+            id: id,
+            gameId: gameId,
+            ply: ply,
+            uci: uci,
+            san: san,
+            evalCentipawns: evalCentipawns,
+            classification: classification,
+            bestMoveUci: bestMoveUci,
+          ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $$MovesTableReferences(db, table, e)),
-              )
+              .map((e) =>
+                  (e.readTable(table), $$MovesTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({gameId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
+              addJoins: <
+                  T extends TableManagerState<
                       dynamic,
                       dynamic,
                       dynamic,
@@ -2386,74 +1995,63 @@ class $$MovesTableTableManager
                       dynamic,
                       dynamic,
                       dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (gameId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.gameId,
-                                referencedTable: $$MovesTableReferences
-                                    ._gameIdTable(db),
-                                referencedColumn: $$MovesTableReferences
-                                    ._gameIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+                      dynamic>>(state) {
+                if (gameId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.gameId,
+                    referencedTable: $$MovesTableReferences._gameIdTable(db),
+                    referencedColumn:
+                        $$MovesTableReferences._gameIdTable(db).id,
+                  ) as T;
+                }
 
-                    return state;
-                  },
+                return state;
+              },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },
             );
           },
-        ),
-      );
+        ));
 }
 
-typedef $$MovesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $MovesTable,
-      Move,
-      $$MovesTableFilterComposer,
-      $$MovesTableOrderingComposer,
-      $$MovesTableAnnotationComposer,
-      $$MovesTableCreateCompanionBuilder,
-      $$MovesTableUpdateCompanionBuilder,
-      (Move, $$MovesTableReferences),
-      Move,
-      PrefetchHooks Function({bool gameId})
-    >;
-typedef $$ProfileTableCreateCompanionBuilder =
-    ProfileCompanion Function({
-      Value<int> id,
-      Value<String> username,
-      Value<String?> avatarPath,
-      Value<int> currentRating,
-      Value<int> peakRating,
-      Value<int> gamesPlayed,
-      Value<int> wins,
-      Value<int> draws,
-      Value<int> losses,
-      required DateTime createdAt,
-    });
-typedef $$ProfileTableUpdateCompanionBuilder =
-    ProfileCompanion Function({
-      Value<int> id,
-      Value<String> username,
-      Value<String?> avatarPath,
-      Value<int> currentRating,
-      Value<int> peakRating,
-      Value<int> gamesPlayed,
-      Value<int> wins,
-      Value<int> draws,
-      Value<int> losses,
-      Value<DateTime> createdAt,
-    });
+typedef $$MovesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $MovesTable,
+    Move,
+    $$MovesTableFilterComposer,
+    $$MovesTableOrderingComposer,
+    $$MovesTableAnnotationComposer,
+    $$MovesTableCreateCompanionBuilder,
+    $$MovesTableUpdateCompanionBuilder,
+    (Move, $$MovesTableReferences),
+    Move,
+    PrefetchHooks Function({bool gameId})>;
+typedef $$ProfileTableCreateCompanionBuilder = ProfileCompanion Function({
+  Value<int> id,
+  Value<String> username,
+  Value<String?> avatarPath,
+  Value<int> currentRating,
+  Value<int> peakRating,
+  Value<int> gamesPlayed,
+  Value<int> wins,
+  Value<int> draws,
+  Value<int> losses,
+  required DateTime createdAt,
+});
+typedef $$ProfileTableUpdateCompanionBuilder = ProfileCompanion Function({
+  Value<int> id,
+  Value<String> username,
+  Value<String?> avatarPath,
+  Value<int> currentRating,
+  Value<int> peakRating,
+  Value<int> gamesPlayed,
+  Value<int> wins,
+  Value<int> draws,
+  Value<int> losses,
+  Value<DateTime> createdAt,
+});
 
 class $$ProfileTableFilterComposer
     extends Composer<_$AppDatabase, $ProfileTable> {
@@ -2465,54 +2063,34 @@ class $$ProfileTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get username => $composableBuilder(
-    column: $table.username,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.username, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get avatarPath => $composableBuilder(
-    column: $table.avatarPath,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.avatarPath, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get currentRating => $composableBuilder(
-    column: $table.currentRating,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.currentRating, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get peakRating => $composableBuilder(
-    column: $table.peakRating,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.peakRating, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get gamesPlayed => $composableBuilder(
-    column: $table.gamesPlayed,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.gamesPlayed, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get wins => $composableBuilder(
-    column: $table.wins,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.wins, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get draws => $composableBuilder(
-    column: $table.draws,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.draws, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get losses => $composableBuilder(
-    column: $table.losses,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.losses, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
 }
 
 class $$ProfileTableOrderingComposer
@@ -2525,54 +2103,35 @@ class $$ProfileTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get username => $composableBuilder(
-    column: $table.username,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.username, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get avatarPath => $composableBuilder(
-    column: $table.avatarPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.avatarPath, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get currentRating => $composableBuilder(
-    column: $table.currentRating,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.currentRating,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get peakRating => $composableBuilder(
-    column: $table.peakRating,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.peakRating, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get gamesPlayed => $composableBuilder(
-    column: $table.gamesPlayed,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.gamesPlayed, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get wins => $composableBuilder(
-    column: $table.wins,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.wins, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get draws => $composableBuilder(
-    column: $table.draws,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.draws, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get losses => $composableBuilder(
-    column: $table.losses,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.losses, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ProfileTableAnnotationComposer
@@ -2591,24 +2150,16 @@ class $$ProfileTableAnnotationComposer
       $composableBuilder(column: $table.username, builder: (column) => column);
 
   GeneratedColumn<String> get avatarPath => $composableBuilder(
-    column: $table.avatarPath,
-    builder: (column) => column,
-  );
+      column: $table.avatarPath, builder: (column) => column);
 
   GeneratedColumn<int> get currentRating => $composableBuilder(
-    column: $table.currentRating,
-    builder: (column) => column,
-  );
+      column: $table.currentRating, builder: (column) => column);
 
   GeneratedColumn<int> get peakRating => $composableBuilder(
-    column: $table.peakRating,
-    builder: (column) => column,
-  );
+      column: $table.peakRating, builder: (column) => column);
 
   GeneratedColumn<int> get gamesPlayed => $composableBuilder(
-    column: $table.gamesPlayed,
-    builder: (column) => column,
-  );
+      column: $table.gamesPlayed, builder: (column) => column);
 
   GeneratedColumn<int> get wins =>
       $composableBuilder(column: $table.wins, builder: (column) => column);
@@ -2623,27 +2174,20 @@ class $$ProfileTableAnnotationComposer
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
 
-class $$ProfileTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $ProfileTable,
-          ProfileData,
-          $$ProfileTableFilterComposer,
-          $$ProfileTableOrderingComposer,
-          $$ProfileTableAnnotationComposer,
-          $$ProfileTableCreateCompanionBuilder,
-          $$ProfileTableUpdateCompanionBuilder,
-          (
-            ProfileData,
-            BaseReferences<_$AppDatabase, $ProfileTable, ProfileData>,
-          ),
-          ProfileData,
-          PrefetchHooks Function()
-        > {
+class $$ProfileTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ProfileTable,
+    ProfileData,
+    $$ProfileTableFilterComposer,
+    $$ProfileTableOrderingComposer,
+    $$ProfileTableAnnotationComposer,
+    $$ProfileTableCreateCompanionBuilder,
+    $$ProfileTableUpdateCompanionBuilder,
+    (ProfileData, BaseReferences<_$AppDatabase, $ProfileTable, ProfileData>),
+    ProfileData,
+    PrefetchHooks Function()> {
   $$ProfileTableTableManager(_$AppDatabase db, $ProfileTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -2652,76 +2196,73 @@ class $$ProfileTableTableManager
               $$ProfileTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$ProfileTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> username = const Value.absent(),
-                Value<String?> avatarPath = const Value.absent(),
-                Value<int> currentRating = const Value.absent(),
-                Value<int> peakRating = const Value.absent(),
-                Value<int> gamesPlayed = const Value.absent(),
-                Value<int> wins = const Value.absent(),
-                Value<int> draws = const Value.absent(),
-                Value<int> losses = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => ProfileCompanion(
-                id: id,
-                username: username,
-                avatarPath: avatarPath,
-                currentRating: currentRating,
-                peakRating: peakRating,
-                gamesPlayed: gamesPlayed,
-                wins: wins,
-                draws: draws,
-                losses: losses,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> username = const Value.absent(),
-                Value<String?> avatarPath = const Value.absent(),
-                Value<int> currentRating = const Value.absent(),
-                Value<int> peakRating = const Value.absent(),
-                Value<int> gamesPlayed = const Value.absent(),
-                Value<int> wins = const Value.absent(),
-                Value<int> draws = const Value.absent(),
-                Value<int> losses = const Value.absent(),
-                required DateTime createdAt,
-              }) => ProfileCompanion.insert(
-                id: id,
-                username: username,
-                avatarPath: avatarPath,
-                currentRating: currentRating,
-                peakRating: peakRating,
-                gamesPlayed: gamesPlayed,
-                wins: wins,
-                draws: draws,
-                losses: losses,
-                createdAt: createdAt,
-              ),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> username = const Value.absent(),
+            Value<String?> avatarPath = const Value.absent(),
+            Value<int> currentRating = const Value.absent(),
+            Value<int> peakRating = const Value.absent(),
+            Value<int> gamesPlayed = const Value.absent(),
+            Value<int> wins = const Value.absent(),
+            Value<int> draws = const Value.absent(),
+            Value<int> losses = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              ProfileCompanion(
+            id: id,
+            username: username,
+            avatarPath: avatarPath,
+            currentRating: currentRating,
+            peakRating: peakRating,
+            gamesPlayed: gamesPlayed,
+            wins: wins,
+            draws: draws,
+            losses: losses,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> username = const Value.absent(),
+            Value<String?> avatarPath = const Value.absent(),
+            Value<int> currentRating = const Value.absent(),
+            Value<int> peakRating = const Value.absent(),
+            Value<int> gamesPlayed = const Value.absent(),
+            Value<int> wins = const Value.absent(),
+            Value<int> draws = const Value.absent(),
+            Value<int> losses = const Value.absent(),
+            required DateTime createdAt,
+          }) =>
+              ProfileCompanion.insert(
+            id: id,
+            username: username,
+            avatarPath: avatarPath,
+            currentRating: currentRating,
+            peakRating: peakRating,
+            gamesPlayed: gamesPlayed,
+            wins: wins,
+            draws: draws,
+            losses: losses,
+            createdAt: createdAt,
+          ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$ProfileTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $ProfileTable,
-      ProfileData,
-      $$ProfileTableFilterComposer,
-      $$ProfileTableOrderingComposer,
-      $$ProfileTableAnnotationComposer,
-      $$ProfileTableCreateCompanionBuilder,
-      $$ProfileTableUpdateCompanionBuilder,
-      (ProfileData, BaseReferences<_$AppDatabase, $ProfileTable, ProfileData>),
-      ProfileData,
-      PrefetchHooks Function()
-    >;
+typedef $$ProfileTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ProfileTable,
+    ProfileData,
+    $$ProfileTableFilterComposer,
+    $$ProfileTableOrderingComposer,
+    $$ProfileTableAnnotationComposer,
+    $$ProfileTableCreateCompanionBuilder,
+    $$ProfileTableUpdateCompanionBuilder,
+    (ProfileData, BaseReferences<_$AppDatabase, $ProfileTable, ProfileData>),
+    ProfileData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
