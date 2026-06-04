@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Chessing",
+        "supportEmail": "mauryamj32@gmail.com"
+      }
+    }
+  }
+}

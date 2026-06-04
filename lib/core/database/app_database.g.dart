@@ -64,6 +64,22 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _remoteIdMeta =
+      const VerificationMeta('remoteId');
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+      'remote_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _pendingSyncMeta =
+      const VerificationMeta('pendingSync');
+  @override
+  late final GeneratedColumn<bool> pendingSync = GeneratedColumn<bool>(
+      'pending_sync', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("pending_sync" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -74,7 +90,9 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
         timeControlSeconds,
         playedAt,
         playerAccuracy,
-        playerColorIndex
+        playerColorIndex,
+        remoteId,
+        pendingSync
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -135,6 +153,16 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
           playerColorIndex.isAcceptableOrUnknown(
               data['player_color_index']!, _playerColorIndexMeta));
     }
+    if (data.containsKey('remote_id')) {
+      context.handle(_remoteIdMeta,
+          remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta));
+    }
+    if (data.containsKey('pending_sync')) {
+      context.handle(
+          _pendingSyncMeta,
+          pendingSync.isAcceptableOrUnknown(
+              data['pending_sync']!, _pendingSyncMeta));
+    }
     return context;
   }
 
@@ -162,6 +190,10 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
           .read(DriftSqlType.int, data['${effectivePrefix}player_accuracy']),
       playerColorIndex: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}player_color_index'])!,
+      remoteId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}remote_id']),
+      pendingSync: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}pending_sync'])!,
     );
   }
 
@@ -181,6 +213,8 @@ class Game extends DataClass implements Insertable<Game> {
   final DateTime playedAt;
   final int? playerAccuracy;
   final int playerColorIndex;
+  final String? remoteId;
+  final bool pendingSync;
   const Game(
       {required this.id,
       required this.pgn,
@@ -190,7 +224,9 @@ class Game extends DataClass implements Insertable<Game> {
       this.timeControlSeconds,
       required this.playedAt,
       this.playerAccuracy,
-      required this.playerColorIndex});
+      required this.playerColorIndex,
+      this.remoteId,
+      required this.pendingSync});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -209,6 +245,10 @@ class Game extends DataClass implements Insertable<Game> {
       map['player_accuracy'] = Variable<int>(playerAccuracy);
     }
     map['player_color_index'] = Variable<int>(playerColorIndex);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
+    map['pending_sync'] = Variable<bool>(pendingSync);
     return map;
   }
 
@@ -229,6 +269,10 @@ class Game extends DataClass implements Insertable<Game> {
           ? const Value.absent()
           : Value(playerAccuracy),
       playerColorIndex: Value(playerColorIndex),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
+      pendingSync: Value(pendingSync),
     );
   }
 
@@ -245,6 +289,8 @@ class Game extends DataClass implements Insertable<Game> {
       playedAt: serializer.fromJson<DateTime>(json['playedAt']),
       playerAccuracy: serializer.fromJson<int?>(json['playerAccuracy']),
       playerColorIndex: serializer.fromJson<int>(json['playerColorIndex']),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
+      pendingSync: serializer.fromJson<bool>(json['pendingSync']),
     );
   }
   @override
@@ -260,6 +306,8 @@ class Game extends DataClass implements Insertable<Game> {
       'playedAt': serializer.toJson<DateTime>(playedAt),
       'playerAccuracy': serializer.toJson<int?>(playerAccuracy),
       'playerColorIndex': serializer.toJson<int>(playerColorIndex),
+      'remoteId': serializer.toJson<String?>(remoteId),
+      'pendingSync': serializer.toJson<bool>(pendingSync),
     };
   }
 
@@ -272,7 +320,9 @@ class Game extends DataClass implements Insertable<Game> {
           Value<int?> timeControlSeconds = const Value.absent(),
           DateTime? playedAt,
           Value<int?> playerAccuracy = const Value.absent(),
-          int? playerColorIndex}) =>
+          int? playerColorIndex,
+          Value<String?> remoteId = const Value.absent(),
+          bool? pendingSync}) =>
       Game(
         id: id ?? this.id,
         pgn: pgn ?? this.pgn,
@@ -286,6 +336,8 @@ class Game extends DataClass implements Insertable<Game> {
         playerAccuracy:
             playerAccuracy.present ? playerAccuracy.value : this.playerAccuracy,
         playerColorIndex: playerColorIndex ?? this.playerColorIndex,
+        remoteId: remoteId.present ? remoteId.value : this.remoteId,
+        pendingSync: pendingSync ?? this.pendingSync,
       );
   Game copyWithCompanion(GamesCompanion data) {
     return Game(
@@ -304,6 +356,9 @@ class Game extends DataClass implements Insertable<Game> {
       playerColorIndex: data.playerColorIndex.present
           ? data.playerColorIndex.value
           : this.playerColorIndex,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      pendingSync:
+          data.pendingSync.present ? data.pendingSync.value : this.pendingSync,
     );
   }
 
@@ -318,14 +373,26 @@ class Game extends DataClass implements Insertable<Game> {
           ..write('timeControlSeconds: $timeControlSeconds, ')
           ..write('playedAt: $playedAt, ')
           ..write('playerAccuracy: $playerAccuracy, ')
-          ..write('playerColorIndex: $playerColorIndex')
+          ..write('playerColorIndex: $playerColorIndex, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('pendingSync: $pendingSync')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, pgn, result, mode, botLevel,
-      timeControlSeconds, playedAt, playerAccuracy, playerColorIndex);
+  int get hashCode => Object.hash(
+      id,
+      pgn,
+      result,
+      mode,
+      botLevel,
+      timeControlSeconds,
+      playedAt,
+      playerAccuracy,
+      playerColorIndex,
+      remoteId,
+      pendingSync);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -338,7 +405,9 @@ class Game extends DataClass implements Insertable<Game> {
           other.timeControlSeconds == this.timeControlSeconds &&
           other.playedAt == this.playedAt &&
           other.playerAccuracy == this.playerAccuracy &&
-          other.playerColorIndex == this.playerColorIndex);
+          other.playerColorIndex == this.playerColorIndex &&
+          other.remoteId == this.remoteId &&
+          other.pendingSync == this.pendingSync);
 }
 
 class GamesCompanion extends UpdateCompanion<Game> {
@@ -351,6 +420,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
   final Value<DateTime> playedAt;
   final Value<int?> playerAccuracy;
   final Value<int> playerColorIndex;
+  final Value<String?> remoteId;
+  final Value<bool> pendingSync;
   const GamesCompanion({
     this.id = const Value.absent(),
     this.pgn = const Value.absent(),
@@ -361,6 +432,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     this.playedAt = const Value.absent(),
     this.playerAccuracy = const Value.absent(),
     this.playerColorIndex = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.pendingSync = const Value.absent(),
   });
   GamesCompanion.insert({
     this.id = const Value.absent(),
@@ -372,6 +445,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     required DateTime playedAt,
     this.playerAccuracy = const Value.absent(),
     this.playerColorIndex = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.pendingSync = const Value.absent(),
   })  : pgn = Value(pgn),
         result = Value(result),
         mode = Value(mode),
@@ -386,6 +461,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     Expression<DateTime>? playedAt,
     Expression<int>? playerAccuracy,
     Expression<int>? playerColorIndex,
+    Expression<String>? remoteId,
+    Expression<bool>? pendingSync,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -398,6 +475,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
       if (playedAt != null) 'played_at': playedAt,
       if (playerAccuracy != null) 'player_accuracy': playerAccuracy,
       if (playerColorIndex != null) 'player_color_index': playerColorIndex,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (pendingSync != null) 'pending_sync': pendingSync,
     });
   }
 
@@ -410,7 +489,9 @@ class GamesCompanion extends UpdateCompanion<Game> {
       Value<int?>? timeControlSeconds,
       Value<DateTime>? playedAt,
       Value<int?>? playerAccuracy,
-      Value<int>? playerColorIndex}) {
+      Value<int>? playerColorIndex,
+      Value<String?>? remoteId,
+      Value<bool>? pendingSync}) {
     return GamesCompanion(
       id: id ?? this.id,
       pgn: pgn ?? this.pgn,
@@ -421,6 +502,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
       playedAt: playedAt ?? this.playedAt,
       playerAccuracy: playerAccuracy ?? this.playerAccuracy,
       playerColorIndex: playerColorIndex ?? this.playerColorIndex,
+      remoteId: remoteId ?? this.remoteId,
+      pendingSync: pendingSync ?? this.pendingSync,
     );
   }
 
@@ -454,6 +537,12 @@ class GamesCompanion extends UpdateCompanion<Game> {
     if (playerColorIndex.present) {
       map['player_color_index'] = Variable<int>(playerColorIndex.value);
     }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (pendingSync.present) {
+      map['pending_sync'] = Variable<bool>(pendingSync.value);
+    }
     return map;
   }
 
@@ -468,7 +557,9 @@ class GamesCompanion extends UpdateCompanion<Game> {
           ..write('timeControlSeconds: $timeControlSeconds, ')
           ..write('playedAt: $playedAt, ')
           ..write('playerAccuracy: $playerAccuracy, ')
-          ..write('playerColorIndex: $playerColorIndex')
+          ..write('playerColorIndex: $playerColorIndex, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('pendingSync: $pendingSync')
           ..write(')'))
         .toString();
   }
@@ -972,6 +1063,12 @@ class $ProfileTable extends Profile with TableInfo<$ProfileTable, ProfileData> {
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _remoteIdMeta =
+      const VerificationMeta('remoteId');
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+      'remote_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -989,6 +1086,7 @@ class $ProfileTable extends Profile with TableInfo<$ProfileTable, ProfileData> {
         wins,
         draws,
         losses,
+        remoteId,
         createdAt
       ];
   @override
@@ -1044,6 +1142,10 @@ class $ProfileTable extends Profile with TableInfo<$ProfileTable, ProfileData> {
       context.handle(_lossesMeta,
           losses.isAcceptableOrUnknown(data['losses']!, _lossesMeta));
     }
+    if (data.containsKey('remote_id')) {
+      context.handle(_remoteIdMeta,
+          remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -1077,6 +1179,8 @@ class $ProfileTable extends Profile with TableInfo<$ProfileTable, ProfileData> {
           .read(DriftSqlType.int, data['${effectivePrefix}draws'])!,
       losses: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}losses'])!,
+      remoteId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}remote_id']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -1098,6 +1202,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
   final int wins;
   final int draws;
   final int losses;
+  final String? remoteId;
   final DateTime createdAt;
   const ProfileData(
       {required this.id,
@@ -1109,6 +1214,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       required this.wins,
       required this.draws,
       required this.losses,
+      this.remoteId,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1124,6 +1230,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     map['wins'] = Variable<int>(wins);
     map['draws'] = Variable<int>(draws);
     map['losses'] = Variable<int>(losses);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1141,6 +1250,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       wins: Value(wins),
       draws: Value(draws),
       losses: Value(losses),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
       createdAt: Value(createdAt),
     );
   }
@@ -1158,6 +1270,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       wins: serializer.fromJson<int>(json['wins']),
       draws: serializer.fromJson<int>(json['draws']),
       losses: serializer.fromJson<int>(json['losses']),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1174,6 +1287,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       'wins': serializer.toJson<int>(wins),
       'draws': serializer.toJson<int>(draws),
       'losses': serializer.toJson<int>(losses),
+      'remoteId': serializer.toJson<String?>(remoteId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1188,6 +1302,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
           int? wins,
           int? draws,
           int? losses,
+          Value<String?> remoteId = const Value.absent(),
           DateTime? createdAt}) =>
       ProfileData(
         id: id ?? this.id,
@@ -1199,6 +1314,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
         wins: wins ?? this.wins,
         draws: draws ?? this.draws,
         losses: losses ?? this.losses,
+        remoteId: remoteId.present ? remoteId.value : this.remoteId,
         createdAt: createdAt ?? this.createdAt,
       );
   ProfileData copyWithCompanion(ProfileCompanion data) {
@@ -1217,6 +1333,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       wins: data.wins.present ? data.wins.value : this.wins,
       draws: data.draws.present ? data.draws.value : this.draws,
       losses: data.losses.present ? data.losses.value : this.losses,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1233,6 +1350,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
           ..write('wins: $wins, ')
           ..write('draws: $draws, ')
           ..write('losses: $losses, ')
+          ..write('remoteId: $remoteId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1240,7 +1358,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
 
   @override
   int get hashCode => Object.hash(id, username, avatarPath, currentRating,
-      peakRating, gamesPlayed, wins, draws, losses, createdAt);
+      peakRating, gamesPlayed, wins, draws, losses, remoteId, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1254,6 +1372,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
           other.wins == this.wins &&
           other.draws == this.draws &&
           other.losses == this.losses &&
+          other.remoteId == this.remoteId &&
           other.createdAt == this.createdAt);
 }
 
@@ -1267,6 +1386,7 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
   final Value<int> wins;
   final Value<int> draws;
   final Value<int> losses;
+  final Value<String?> remoteId;
   final Value<DateTime> createdAt;
   const ProfileCompanion({
     this.id = const Value.absent(),
@@ -1278,6 +1398,7 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
     this.wins = const Value.absent(),
     this.draws = const Value.absent(),
     this.losses = const Value.absent(),
+    this.remoteId = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   ProfileCompanion.insert({
@@ -1290,6 +1411,7 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
     this.wins = const Value.absent(),
     this.draws = const Value.absent(),
     this.losses = const Value.absent(),
+    this.remoteId = const Value.absent(),
     required DateTime createdAt,
   }) : createdAt = Value(createdAt);
   static Insertable<ProfileData> custom({
@@ -1302,6 +1424,7 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
     Expression<int>? wins,
     Expression<int>? draws,
     Expression<int>? losses,
+    Expression<String>? remoteId,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -1314,6 +1437,7 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
       if (wins != null) 'wins': wins,
       if (draws != null) 'draws': draws,
       if (losses != null) 'losses': losses,
+      if (remoteId != null) 'remote_id': remoteId,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -1328,6 +1452,7 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
       Value<int>? wins,
       Value<int>? draws,
       Value<int>? losses,
+      Value<String?>? remoteId,
       Value<DateTime>? createdAt}) {
     return ProfileCompanion(
       id: id ?? this.id,
@@ -1339,6 +1464,7 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
       wins: wins ?? this.wins,
       draws: draws ?? this.draws,
       losses: losses ?? this.losses,
+      remoteId: remoteId ?? this.remoteId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -1373,6 +1499,9 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
     if (losses.present) {
       map['losses'] = Variable<int>(losses.value);
     }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1391,6 +1520,7 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
           ..write('wins: $wins, ')
           ..write('draws: $draws, ')
           ..write('losses: $losses, ')
+          ..write('remoteId: $remoteId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1420,6 +1550,8 @@ typedef $$GamesTableCreateCompanionBuilder = GamesCompanion Function({
   required DateTime playedAt,
   Value<int?> playerAccuracy,
   Value<int> playerColorIndex,
+  Value<String?> remoteId,
+  Value<bool> pendingSync,
 });
 typedef $$GamesTableUpdateCompanionBuilder = GamesCompanion Function({
   Value<int> id,
@@ -1431,6 +1563,8 @@ typedef $$GamesTableUpdateCompanionBuilder = GamesCompanion Function({
   Value<DateTime> playedAt,
   Value<int?> playerAccuracy,
   Value<int> playerColorIndex,
+  Value<String?> remoteId,
+  Value<bool> pendingSync,
 });
 
 final class $$GamesTableReferences
@@ -1489,6 +1623,12 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
   ColumnFilters<int> get playerColorIndex => $composableBuilder(
       column: $table.playerColorIndex,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get pendingSync => $composableBuilder(
+      column: $table.pendingSync, builder: (column) => ColumnFilters(column));
 
   Expression<bool> movesRefs(
       Expression<bool> Function($$MovesTableFilterComposer f) f) {
@@ -1550,6 +1690,12 @@ class $$GamesTableOrderingComposer
   ColumnOrderings<int> get playerColorIndex => $composableBuilder(
       column: $table.playerColorIndex,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get pendingSync => $composableBuilder(
+      column: $table.pendingSync, builder: (column) => ColumnOrderings(column));
 }
 
 class $$GamesTableAnnotationComposer
@@ -1587,6 +1733,12 @@ class $$GamesTableAnnotationComposer
 
   GeneratedColumn<int> get playerColorIndex => $composableBuilder(
       column: $table.playerColorIndex, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<bool> get pendingSync => $composableBuilder(
+      column: $table.pendingSync, builder: (column) => column);
 
   Expression<T> movesRefs<T extends Object>(
       Expression<T> Function($$MovesTableAnnotationComposer a) f) {
@@ -1642,6 +1794,8 @@ class $$GamesTableTableManager extends RootTableManager<
             Value<DateTime> playedAt = const Value.absent(),
             Value<int?> playerAccuracy = const Value.absent(),
             Value<int> playerColorIndex = const Value.absent(),
+            Value<String?> remoteId = const Value.absent(),
+            Value<bool> pendingSync = const Value.absent(),
           }) =>
               GamesCompanion(
             id: id,
@@ -1653,6 +1807,8 @@ class $$GamesTableTableManager extends RootTableManager<
             playedAt: playedAt,
             playerAccuracy: playerAccuracy,
             playerColorIndex: playerColorIndex,
+            remoteId: remoteId,
+            pendingSync: pendingSync,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -1664,6 +1820,8 @@ class $$GamesTableTableManager extends RootTableManager<
             required DateTime playedAt,
             Value<int?> playerAccuracy = const Value.absent(),
             Value<int> playerColorIndex = const Value.absent(),
+            Value<String?> remoteId = const Value.absent(),
+            Value<bool> pendingSync = const Value.absent(),
           }) =>
               GamesCompanion.insert(
             id: id,
@@ -1675,6 +1833,8 @@ class $$GamesTableTableManager extends RootTableManager<
             playedAt: playedAt,
             playerAccuracy: playerAccuracy,
             playerColorIndex: playerColorIndex,
+            remoteId: remoteId,
+            pendingSync: pendingSync,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
@@ -2038,6 +2198,7 @@ typedef $$ProfileTableCreateCompanionBuilder = ProfileCompanion Function({
   Value<int> wins,
   Value<int> draws,
   Value<int> losses,
+  Value<String?> remoteId,
   required DateTime createdAt,
 });
 typedef $$ProfileTableUpdateCompanionBuilder = ProfileCompanion Function({
@@ -2050,6 +2211,7 @@ typedef $$ProfileTableUpdateCompanionBuilder = ProfileCompanion Function({
   Value<int> wins,
   Value<int> draws,
   Value<int> losses,
+  Value<String?> remoteId,
   Value<DateTime> createdAt,
 });
 
@@ -2088,6 +2250,9 @@ class $$ProfileTableFilterComposer
 
   ColumnFilters<int> get losses => $composableBuilder(
       column: $table.losses, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -2130,6 +2295,9 @@ class $$ProfileTableOrderingComposer
   ColumnOrderings<int> get losses => $composableBuilder(
       column: $table.losses, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
@@ -2170,6 +2338,9 @@ class $$ProfileTableAnnotationComposer
   GeneratedColumn<int> get losses =>
       $composableBuilder(column: $table.losses, builder: (column) => column);
 
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -2206,6 +2377,7 @@ class $$ProfileTableTableManager extends RootTableManager<
             Value<int> wins = const Value.absent(),
             Value<int> draws = const Value.absent(),
             Value<int> losses = const Value.absent(),
+            Value<String?> remoteId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               ProfileCompanion(
@@ -2218,6 +2390,7 @@ class $$ProfileTableTableManager extends RootTableManager<
             wins: wins,
             draws: draws,
             losses: losses,
+            remoteId: remoteId,
             createdAt: createdAt,
           ),
           createCompanionCallback: ({
@@ -2230,6 +2403,7 @@ class $$ProfileTableTableManager extends RootTableManager<
             Value<int> wins = const Value.absent(),
             Value<int> draws = const Value.absent(),
             Value<int> losses = const Value.absent(),
+            Value<String?> remoteId = const Value.absent(),
             required DateTime createdAt,
           }) =>
               ProfileCompanion.insert(
@@ -2242,6 +2416,7 @@ class $$ProfileTableTableManager extends RootTableManager<
             wins: wins,
             draws: draws,
             losses: losses,
+            remoteId: remoteId,
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0

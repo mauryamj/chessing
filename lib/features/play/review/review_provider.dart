@@ -98,6 +98,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
             mode: '',
             playedAt: DateTime.now(),
             playerColorIndex: 0,
+            pendingSync: false,
           ),
           moves: [],
           currentPly: -1,

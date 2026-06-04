@@ -44,4 +44,24 @@ extension ProfileDao on AppDatabase {
       createdAt: DateTime.now(),
     ));
   }
+
+  Future<void> upsertProfileFromRemote(Map<String, dynamic> json) async {
+    final current = await getProfile();
+    final createdAtVal = json['created_at'] != null
+        ? DateTime.parse(json['created_at'])
+        : (current?.createdAt ?? DateTime.now());
+    await upsertProfile(ProfileCompanion(
+      id: current != null ? Value(current.id) : const Value.absent(),
+      username: Value(json['username'] ?? 'Player'),
+      avatarPath: Value(json['avatar_url']),
+      currentRating: Value(json['current_rating'] ?? 800),
+      peakRating: Value(json['peak_rating'] ?? 800),
+      gamesPlayed: Value(json['games_played'] ?? 0),
+      wins: Value(json['wins'] ?? 0),
+      draws: Value(json['draws'] ?? 0),
+      losses: Value(json['losses'] ?? 0),
+      remoteId: Value(json['id']),
+      createdAt: Value(createdAtVal),
+    ));
+  }
 }

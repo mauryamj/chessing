@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>270105926493-jenardpd31cr5t56u4gj80ngni4sfair.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.270105926493-jenardpd31cr5t56u4gj80ngni4sfair</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDUMDzi1kyFW9CRPoE2JQIuhcVWPtthIvI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>270105926493</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.chessing</string>
+	<key>PROJECT_ID</key>
+	<string>chessing-app-mauryamj</string>
+	<key>STORAGE_BUCKET</key>
+	<string>chessing-app-mauryamj.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:270105926493:ios:84ace92ec4087a5b7da6b4</string>
+</dict>
+</plist>

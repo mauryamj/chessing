@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "270105926493",
+    "project_id": "chessing-app-mauryamj",
+    "storage_bucket": "chessing-app-mauryamj.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:270105926493:android:a2bc3406a96cb5297da6b4",
+        "android_client_info": {
+          "package_name": "com.example.chessing"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "270105926493-f1jcm82r5ifsmk1kq8is3gto9ua9jffm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.chessing",
+            "certificate_hash": "554e075f73682de46570a34a8bfdb46c76850576"
+          }
+        },
+        {
+          "client_id": "270105926493-eg0db58im8t2pq59f9njcu2qkuifo4gf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCruGFSkBbD_RU74JbOqFCGx1sV7UqfKgo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "270105926493-eg0db58im8t2pq59f9njcu2qkuifo4gf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "270105926493-jenardpd31cr5t56u4gj80ngni4sfair.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.chessing"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

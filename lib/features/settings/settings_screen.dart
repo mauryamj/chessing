@@ -1,178 +1,137 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/supabase/sync/sync_service.dart';
 import 'settings_provider.dart';
+import 'sections/account_section.dart';
+import 'sections/appearance_section.dart';
+import 'sections/gameplay_section.dart';
+import 'sections/notifications_section.dart';
+import 'sections/about_section.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settingsAsync = ref.watch(settingsProvider);
-    final notifier = ref.read(settingsProvider.notifier);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final settingsAsync = ref.watch(settingsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: cs.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
       backgroundColor: cs.surface,
-      body: settingsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (settings) => ListView(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          children: [
-            // ── Appearance ──────────────────────────────────────────────────
-            const _SectionHeader(label: 'Appearance'),
-            _SettingsCard(
-              children: [
-                // Theme Mode
-                Semantics(
-                  label: 'Theme mode selector',
-                  child: ListTile(
-                    leading: Semantics(
-                      excludeSemantics: true,
-                      child: Icon(
-                        _themeModeIcon(settings.themeMode),
-                        color: cs.primary,
-                      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          try {
+            await ref.read(syncServiceProvider).pullFromCloud();
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Sync complete!')),
+            );
+          } catch (e) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Sync failed: $e')),
+            );
+          }
+        },
+        child: settingsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e')),
+          data: (settings) => CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(), // required for pull-to-refresh
+            slivers: [
+              SliverAppBar.large(
+                title: const Text('Settings'),
+                pinned: true,
+                backgroundColor: cs.surface,
+                surfaceTintColor: Colors.transparent,
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Account
+                    const _SectionHeader(label: 'Account'),
+                    const _SettingsCard(children: [AccountSection()]),
+                    const SizedBox(height: 20),
+
+                    // Appearance & Board Themes
+                    const _SectionHeader(label: 'Appearance'),
+                    const _SettingsCard(children: [AppearanceSection()]),
+                    const SizedBox(height: 12),
+                    
+                    // Board theme grid
+                    const _SectionHeader(label: 'Board Design'),
+                    _BoardThemeGrid(
+                      selected: settings.boardTheme,
+                      onSelected: ref.read(settingsProvider.notifier).setBoardTheme,
                     ),
-                    title: const Text('Theme'),
-                    subtitle: Text(_themeModeLabel(settings.themeMode)),
-                    trailing: DropdownButton<ThemeMode>(
-                      value: settings.themeMode,
-                      underline: const SizedBox.shrink(),
-                      borderRadius: BorderRadius.circular(12),
-                      items: const [
-                        DropdownMenuItem(
-                          value: ThemeMode.system,
-                          child: Text('System'),
+                    const SizedBox(height: 20),
+
+                    // Gameplay
+                    const _SectionHeader(label: 'Gameplay'),
+                    const _SettingsCard(children: [GameplaySection()]),
+                    const SizedBox(height: 20),
+
+                    // Sound & Haptics
+                    const _SectionHeader(label: 'Sound & Haptics'),
+                    _SettingsCard(
+                      children: [
+                        SwitchListTile(
+                          secondary: Icon(
+                            settings.soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                            color: cs.primary,
+                          ),
+                          title: const Text('Sound Effects'),
+                          subtitle: const Text('Move, capture & clock sounds'),
+                          value: settings.soundEnabled,
+                          onChanged: ref.read(settingsProvider.notifier).setSound,
                         ),
-                        DropdownMenuItem(
-                          value: ThemeMode.light,
-                          child: Text('Light'),
-                        ),
-                        DropdownMenuItem(
-                          value: ThemeMode.dark,
-                          child: Text('Dark'),
+                        if (settings.soundEnabled) ...[
+                          const Divider(indent: 56, height: 1),
+                          ListTile(
+                            leading: const SizedBox(width: 24),
+                            title: const Text('Volume'),
+                            subtitle: Slider(
+                              value: settings.moveSoundVolume,
+                              min: 0.0,
+                              max: 1.0,
+                              onChanged: ref.read(settingsProvider.notifier).setMoveSoundVolume,
+                            ),
+                          ),
+                        ],
+                        const Divider(indent: 56, height: 1),
+                        SwitchListTile(
+                          secondary: Icon(
+                            settings.hapticsEnabled ? Icons.vibration_rounded : Icons.phone_android_rounded,
+                            color: cs.primary,
+                          ),
+                          title: const Text('Haptic Feedback'),
+                          subtitle: const Text('Vibrate on check, capture and moves'),
+                          value: settings.hapticsEnabled,
+                          onChanged: ref.read(settingsProvider.notifier).setHaptics,
                         ),
                       ],
-                      onChanged: (m) {
-                        if (m != null) notifier.setThemeMode(m);
-                      },
                     ),
-                  ),
+                    const SizedBox(height: 20),
+
+                    // Notifications
+                    const _SectionHeader(label: 'Notifications'),
+                    const _SettingsCard(children: [NotificationsSection()]),
+                    const SizedBox(height: 20),
+
+                    // About
+                    const _SectionHeader(label: 'About'),
+                    const _SettingsCard(children: [AboutSection()]),
+                    const SizedBox(height: 48),
+                  ]),
                 ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // ── Board Theme ─────────────────────────────────────────────────
-            const _SectionHeader(label: 'Board Theme'),
-            _BoardThemeGrid(
-              selected: settings.boardTheme,
-              onSelected: notifier.setBoardTheme,
-            ),
-
-            const SizedBox(height: 16),
-
-            // ── Sound & Haptics ─────────────────────────────────────────────
-            const _SectionHeader(label: 'Sound & Haptics'),
-            _SettingsCard(
-              children: [
-                Semantics(
-                  label: 'Sound effects toggle',
-                  toggled: settings.soundEnabled,
-                  child: SwitchListTile(
-                    secondary: Semantics(
-                      excludeSemantics: true,
-                      child: Icon(
-                        settings.soundEnabled
-                            ? Icons.volume_up_rounded
-                            : Icons.volume_off_rounded,
-                        color: cs.primary,
-                      ),
-                    ),
-                    title: const Text('Sound Effects'),
-                    subtitle: const Text('Move, capture & clock sounds'),
-                    value: settings.soundEnabled,
-                    onChanged: notifier.setSound,
-                  ),
-                ),
-                const Divider(height: 1, indent: 56),
-                Semantics(
-                  label: 'Haptics feedback toggle',
-                  toggled: settings.hapticsEnabled,
-                  child: SwitchListTile(
-                    secondary: Semantics(
-                      excludeSemantics: true,
-                      child: Icon(
-                        settings.hapticsEnabled
-                            ? Icons.vibration_rounded
-                            : Icons.phone_android_rounded,
-                        color: cs.primary,
-                      ),
-                    ),
-                    title: const Text('Haptic Feedback'),
-                    subtitle: const Text('Light tap on move, strong on check'),
-                    value: settings.hapticsEnabled,
-                    onChanged: notifier.setHaptics,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // ── About ───────────────────────────────────────────────────────
-            const _SectionHeader(label: 'About'),
-            _SettingsCard(
-              children: [
-                ListTile(
-                  leading: Icon(Icons.info_outline_rounded, color: cs.primary),
-                  title: const Text('Chessing'),
-                  subtitle: const Text('Version 0.1.0 · Built with Flutter & Stockfish'),
-                ),
-                const Divider(height: 1, indent: 56),
-                ListTile(
-                  leading: Icon(Icons.psychology_alt_rounded, color: cs.primary),
-                  title: const Text('AI Coaching'),
-                  subtitle: const Text('Powered by Gemini 2.5 Flash'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  IconData _themeModeIcon(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return Icons.light_mode_rounded;
-      case ThemeMode.dark:
-        return Icons.dark_mode_rounded;
-      case ThemeMode.system:
-        return Icons.brightness_auto_rounded;
-    }
-  }
-
-  String _themeModeLabel(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return 'Always light';
-      case ThemeMode.dark:
-        return 'Always dark';
-      case ThemeMode.system:
-        return 'Follows system preference';
-    }
   }
 }
 
@@ -235,7 +194,6 @@ class _BoardThemeGrid extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Mini board preview (2×2 squares)
                   Expanded(
                     child: Center(
                       child: _MiniBoardPreview(

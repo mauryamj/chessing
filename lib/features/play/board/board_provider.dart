@@ -14,6 +14,10 @@ import '../../../core/engine/stockfish_service.dart';
 import '../../../core/engine/rating_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/daos/profile_dao.dart';
+import '../../../core/database/daos/games_dao.dart';
+import '../../../core/supabase/supabase_client.dart';
+import '../../../core/supabase/repositories/profile_repository.dart';
+import '../../../core/supabase/sync/sync_service.dart';
 
 class BoardNotifier extends StateNotifier<BoardState> {
   final GameConfig config;
@@ -369,6 +373,32 @@ class BoardNotifier extends StateNotifier<BoardState> {
           isDraw: isDraw,
         );
         debugPrint('Rating updated: ${profileData.currentRating} → $newRating');
+      }
+
+      // Supabase syncing hook
+      try {
+        final profileDataAfter = await db.getProfile();
+        final remoteUser = supabase.auth.currentUser;
+        if (remoteUser != null && profileDataAfter != null) {
+          // Update profile stats remotely
+          await ProfileRepository().updateStats(
+            userId: remoteUser.id,
+            currentRating: profileDataAfter.currentRating,
+            peakRating: profileDataAfter.peakRating,
+            gamesPlayed: profileDataAfter.gamesPlayed,
+            wins: profileDataAfter.wins,
+            draws: profileDataAfter.draws,
+            losses: profileDataAfter.losses,
+          );
+          // Push game to remote DB
+          await ref.read(syncServiceProvider).pushGame(gameId);
+        } else {
+          // Offline or guest mode, mark as pending sync
+          await db.markPendingSync(gameId);
+        }
+      } catch (syncError) {
+        debugPrint('Failed to sync game/stats remotely: $syncError');
+        await db.markPendingSync(gameId);
       }
 
       debugPrint(

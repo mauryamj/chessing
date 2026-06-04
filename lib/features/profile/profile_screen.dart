@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/auth/auth_provider.dart';
+import '../../core/auth/auth_state.dart';
 import 'profile_provider.dart';
 import 'widgets/rating_card.dart';
 import 'widgets/wdl_donut.dart';
@@ -80,6 +83,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     // ── Avatar + username ──────────────────────────────
                     _AvatarSection(
                       username: profile.username,
+                      avatarPath: profile.avatarPath,
                       editingName: _editingName,
                       controller: _nameController,
                       onEditTap: () =>
@@ -96,6 +100,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
+
+                    // Guest mode banner
+                    if (ref.watch(authNotifierProvider) is AuthGuest) ...[
+                      Card(
+                        color: cs.primary.withValues(alpha: 0.05),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              const Text(
+                                'Sign in to back up your progress',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Keep your ratings, statistics and match history synchronized across devices.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: () {
+                                  ref.read(authNotifierProvider.notifier).signInWithGoogle();
+                                },
+                                child: const Text('Sign in with Google'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
 
                     // ── Rating card ────────────────────────────────────
                     RatingCard(
@@ -139,6 +177,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
 class _AvatarSection extends StatelessWidget {
   final String username;
+  final String? avatarPath;
   final bool editingName;
   final TextEditingController controller;
   final VoidCallback onEditTap;
@@ -147,6 +186,7 @@ class _AvatarSection extends StatelessWidget {
 
   const _AvatarSection({
     required this.username,
+    this.avatarPath,
     required this.editingName,
     required this.controller,
     required this.onEditTap,
@@ -170,11 +210,19 @@ class _AvatarSection extends StatelessWidget {
           height: 90,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [cs.primary, cs.secondary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: avatarPath == null
+                ? LinearGradient(
+                    colors: [cs.primary, cs.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            image: avatarPath != null
+                ? DecorationImage(
+                    image: CachedNetworkImageProvider(avatarPath!),
+                    fit: BoxFit.cover,
+                  )
+                : null,
             boxShadow: [
               BoxShadow(
                 color: cs.primary.withValues(alpha: 0.4),
@@ -183,16 +231,18 @@ class _AvatarSection extends StatelessWidget {
               )
             ],
           ),
-          child: Center(
-            child: Text(
-              initials,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+          child: avatarPath == null
+              ? Center(
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                )
+              : null,
         ),
         const SizedBox(height: 12),
 
