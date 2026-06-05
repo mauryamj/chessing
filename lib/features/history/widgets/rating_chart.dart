@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../../../core/database/app_database.dart';
+import '../models/game_summary.dart';
 
 class RatingChart extends StatefulWidget {
-  final List<Game> games;
+  final List<GameSummary> games;
   final int startRating;
 
   const RatingChart({

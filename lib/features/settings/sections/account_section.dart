@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/auth/auth_provider.dart';
 import '../../../core/auth/auth_state.dart';
+import '../../../core/database/app_database.dart';
 import '../../../core/supabase/repositories/profile_repository.dart';
 import '../../profile/profile_provider.dart';
 
@@ -25,7 +26,7 @@ class AccountSection extends ConsumerWidget {
       if (!context.mounted) return;
 
       final file = File(image.path);
-      final repo = ProfileRepository();
+      final repo = ProfileRepository(ref.read(cacheServiceProvider));
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading avatar...')),
@@ -33,7 +34,7 @@ class AccountSection extends ConsumerWidget {
 
       final publicUrl = await repo.uploadAvatar(userId, file);
       
-      await repo.updateProfile(userId: userId, avatarUrl: publicUrl);
+      await repo.updateProfile(avatarUrl: publicUrl);
       ref.invalidate(profileProvider);
       ref.read(profileNotifierProvider.notifier).refresh();
 
@@ -72,7 +73,7 @@ class AccountSection extends ConsumerWidget {
             onPressed: () async {
               final newName = controller.text.trim();
               if (newName.isNotEmpty) {
-                await ProfileRepository().updateProfile(userId: userId, username: newName);
+                await ProfileRepository(ref.read(cacheServiceProvider)).updateProfile(username: newName);
                 ref.invalidate(profileProvider);
                 ref.read(profileNotifierProvider.notifier).updateUsername(newName);
               }

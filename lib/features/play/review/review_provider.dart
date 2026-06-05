@@ -99,6 +99,8 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
             playedAt: DateTime.now(),
             playerColorIndex: 0,
             pendingSync: false,
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+            isActive: true,
           ),
           moves: [],
           currentPly: -1,

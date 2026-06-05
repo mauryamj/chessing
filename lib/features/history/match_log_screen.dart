@@ -9,63 +9,67 @@ class MatchLogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final historyAsync = ref.watch(historyProvider);
+    final historyAsync = ref.watch(historyNotifierProvider);
 
     return Scaffold(
       body: historyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (history) => CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              floating: true,
-              snap: true,
-              title: const Text('Match History'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.bar_chart_rounded),
-                  tooltip: 'Performance',
-                  onPressed: () => context.push('/history/performance'),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh_rounded),
-                  tooltip: 'Refresh',
-                  onPressed: () =>
-                      ref.read(historyProvider.notifier).refresh(),
-                ),
-              ],
-            ),
-
-            // Filter + Sort bar
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _FilterBarDelegate(
-                child: _FilterBar(history: history, ref: ref),
+        data: (history) => RefreshIndicator(
+          onRefresh: () => ref.read(historyNotifierProvider.notifier).refresh(),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                floating: true,
+                snap: true,
+                title: const Text('Match History'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.bar_chart_rounded),
+                    tooltip: 'Performance',
+                    onPressed: () => context.push('/history/performance'),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    tooltip: 'Refresh',
+                    onPressed: () =>
+                        ref.read(historyNotifierProvider.notifier).refresh(),
+                  ),
+                ],
               ),
-            ),
 
-            // List
-            if (history.filtered.isEmpty)
-              SliverFillRemaining(
-                child: _EmptyState(filter: history.filter),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final game = history.filtered[index];
-                      return MatchListTile(
-                        game: game,
-                        onTap: () => context.push('/review/${game.id}'),
-                      );
-                    },
-                    childCount: history.filtered.length,
+              // Filter + Sort bar
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _FilterBarDelegate(
+                  child: _FilterBar(history: history, ref: ref),
+                ),
+              ),
+
+              // List
+              if (history.filtered.isEmpty)
+                SliverFillRemaining(
+                  child: _EmptyState(filter: history.filter),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final game = history.filtered[index];
+                        return MatchListTile(
+                          game: game,
+                          onTap: () => context.push('/review/${game.localId ?? game.remoteId}'),
+                        );
+                      },
+                      childCount: history.filtered.length,
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -115,7 +119,7 @@ class _FilterBar extends StatelessWidget {
                       label: Text(f.$2),
                       selected: selected,
                       onSelected: (_) => ref
-                          .read(historyProvider.notifier)
+                          .read(historyNotifierProvider.notifier)
                           .setFilter(f.$1),
                       selectedColor: cs.primaryContainer,
                       checkmarkColor: cs.primary,
@@ -140,7 +144,7 @@ class _FilterBar extends StatelessWidget {
                 color: cs.onSurface.withValues(alpha: 0.6)),
             tooltip: 'Sort',
             onSelected: (s) =>
-                ref.read(historyProvider.notifier).setSort(s),
+                ref.read(historyNotifierProvider.notifier).setSort(s),
             itemBuilder: (_) => sorts
                 .map((s) => PopupMenuItem(
                       value: s.$1,

@@ -12,4 +12,6 @@ class Games extends Table {
   IntColumn get playerColorIndex => integer().withDefault(const Constant(0))(); // 0 for White, 1 for Black
   TextColumn get remoteId => text().nullable()();
   BoolColumn get pendingSync => boolean().withDefault(const Constant(false))();
+  TextColumn get fen => text().withDefault(const Constant('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
 }

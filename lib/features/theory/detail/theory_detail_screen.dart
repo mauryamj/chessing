@@ -18,7 +18,7 @@ class TheoryDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _TheoryDetailScreenState extends ConsumerState<TheoryDetailScreen> {
-  late bishop.Game _game;
+  bishop.Game _game = bishop.Game(variant: bishop.Variant.standard());
   int _currentPly = -1; // -1 is start position
   List<String> _currentLineMoves = [];
   String? _selectedVariationName;
@@ -30,7 +30,6 @@ class _TheoryDetailScreenState extends ConsumerState<TheoryDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _game = bishop.Game(variant: bishop.Variant.standard());
   }
 
   void _initMainLine(TheoryEntry entry) {
@@ -55,7 +54,7 @@ class _TheoryDetailScreenState extends ConsumerState<TheoryDetailScreen> {
     });
   }
 
-  void _loadVariation(Variation variation) {
+  void _loadVariation(TheoryVariation variation) {
     // Variations branch from the current position, or we can just append them/reset.
     // In chess theory, a variation usually branches off a specific ply or the starting FEN.
     // Let's assume variations in our simple JSON branch from the STARTING position of the opening.
@@ -123,6 +122,9 @@ class _TheoryDetailScreenState extends ConsumerState<TheoryDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final entryAsyncValue = ref.watch(theoryEntryByIdProvider(widget.theoryId));
+    final theoryStateAsync = ref.watch(theoryNotifierProvider);
+    final isBookmarked = theoryStateAsync.value?.isBookmarked(widget.theoryId) ?? false;
+    final isCompleted = theoryStateAsync.value?.isCompleted(widget.theoryId) ?? false;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -131,6 +133,17 @@ class _TheoryDetailScreenState extends ConsumerState<TheoryDetailScreen> {
           'Lesson Detail',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: isBookmarked ? Colors.amber : null,
+            ),
+            onPressed: () {
+              ref.read(theoryNotifierProvider.notifier).toggleBookmark(widget.theoryId);
+            },
+          ),
+        ],
       ),
       body: entryAsyncValue.when(
         data: (entry) {
@@ -337,6 +350,44 @@ class _TheoryDetailScreenState extends ConsumerState<TheoryDetailScreen> {
                       },
                     ),
                   ],
+                  const SizedBox(height: 24),
+                  if (isCompleted)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text(
+                            'LESSON COMPLETED',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(theoryNotifierProvider.notifier).markCompleted(widget.theoryId);
+                      },
+                      icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                      label: const Text('MARK LESSON AS COMPLETED', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
                 ],
               ),
             ),

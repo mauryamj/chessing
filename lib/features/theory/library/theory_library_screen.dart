@@ -35,6 +35,7 @@ class TheoryLibraryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filteredEntriesAsyncValue = ref.watch(filteredTheoryEntriesProvider);
     final selectedCategory = ref.watch(theoryFilterCategoryProvider);
+    final theoryStateAsync = ref.watch(theoryNotifierProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -104,15 +105,18 @@ class TheoryLibraryScreen extends ConsumerWidget {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: entries.length,
-                  itemBuilder: (context, index) {
-                    final entry = entries[index];
-                    final phaseColor = _getColorForPhase(entry.phase, theme);
+                return RefreshIndicator(
+                  onRefresh: () => ref.read(theoryNotifierProvider.notifier).refresh(),
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = entries[index];
+                      final phaseColor = _getColorForPhase(entry.phase, theme);
 
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -199,16 +203,44 @@ class TheoryLibraryScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      (theoryStateAsync.value?.isBookmarked(entry.id) ?? false)
+                                          ? Icons.bookmark
+                                          : Icons.bookmark_border,
+                                      color: (theoryStateAsync.value?.isBookmarked(entry.id) ?? false)
+                                          ? Colors.amber
+                                          : theme.hintColor,
+                                    ),
+                                    onPressed: () {
+                                      ref.read(theoryNotifierProvider.notifier).toggleBookmark(entry.id);
+                                    },
+                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.all(8),
+                                  ),
+                                  if (theoryStateAsync.value?.isCompleted(entry.id) ?? false)
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                      size: 20,
+                                    ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
                       ),
                     );
                   },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(
+                ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(
                 child: Text('Error loading theory: $err'),
               ),
             ),

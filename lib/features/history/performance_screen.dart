@@ -9,7 +9,7 @@ class PerformanceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final historyAsync = ref.watch(historyProvider);
+    final historyAsync = ref.watch(historyNotifierProvider);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 

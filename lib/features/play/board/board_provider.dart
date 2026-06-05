@@ -18,6 +18,7 @@ import '../../../core/database/daos/games_dao.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../../core/supabase/repositories/profile_repository.dart';
 import '../../../core/supabase/sync/sync_service.dart';
+import '../../history/history_provider.dart';
 
 class BoardNotifier extends StateNotifier<BoardState> {
   final GameConfig config;
@@ -50,6 +51,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
   }
 
   void _initializeGame() {
+    _clockTimer?.cancel();
     _game = bishop.Game(variant: bishop.Variant.standard());
 
     // Determine player color
@@ -381,8 +383,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
         final remoteUser = supabase.auth.currentUser;
         if (remoteUser != null && profileDataAfter != null) {
           // Update profile stats remotely
-          await ProfileRepository().updateStats(
-            userId: remoteUser.id,
+          await ProfileRepository(ref.read(cacheServiceProvider)).updateStats(
             currentRating: profileDataAfter.currentRating,
             peakRating: profileDataAfter.peakRating,
             gamesPlayed: profileDataAfter.gamesPlayed,
@@ -401,11 +402,19 @@ class BoardNotifier extends StateNotifier<BoardState> {
         await db.markPendingSync(gameId);
       }
 
+      state = state.copyWith(savedLocalGameId: gameId);
+      await ref.read(cacheServiceProvider).invalidate('match_history');
+      ref.invalidate(historyNotifierProvider);
+
       debugPrint(
           'Game and moves saved to SQLite. GameID: $gameId');
     } catch (e) {
       debugPrint('Error saving game to SQLite database: $e');
     }
+  }
+
+  void playAgain() {
+    _initializeGame();
   }
 
   @override

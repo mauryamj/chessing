@@ -8,15 +8,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'tables/games_table.dart';
 import 'tables/moves_table.dart';
 import 'tables/profile_table.dart';
+import 'tables/cache_meta_table.dart';
+import 'tables/theory_entries_table.dart';
+import 'tables/theory_user_data_table.dart';
+import 'tables/historical_matches_table.dart';
+import 'daos/theory_dao.dart';
+import 'daos/historical_matches_dao.dart';
+import '../cache/cache_service.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Games, Moves, Profile])
+@DriftDatabase(
+  tables: [Games, Moves, Profile, CacheMeta, TheoryEntries, TheoryUserData, HistoricalMatches],
+  daos: [TheoryDao, HistoricalMatchesDao],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -29,6 +39,14 @@ class AppDatabase extends _$AppDatabase {
             await migrator.addColumn(profile, profile.remoteId);
             await migrator.addColumn(games, games.remoteId);
             await migrator.addColumn(games, games.pendingSync);
+          }
+          if (from < 4) {
+            await migrator.createTable(cacheMeta);
+            await migrator.createTable(theoryEntries);
+            await migrator.createTable(theoryUserData);
+            await migrator.createTable(historicalMatches);
+            await migrator.addColumn(games, games.fen);
+            await migrator.addColumn(games, games.isActive);
           }
         },
       );
@@ -73,3 +91,21 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   ref.onDispose(() => db.close());
   return db;
 });
+
+final cacheServiceProvider = Provider<CacheService>((ref) {
+  final db = ref.watch(databaseProvider);
+  return CacheService(db);
+});
+
+final theoryDaoProvider = Provider<TheoryDao>((ref) {
+  return ref.watch(databaseProvider).theoryDao;
+});
+
+final historicalMatchesDaoProvider = Provider<HistoricalMatchesDao>((ref) {
+  return ref.watch(databaseProvider).historicalMatchesDao;
+});
+
+final gamesDaoProvider = Provider<AppDatabase>((ref) {
+  return ref.watch(databaseProvider);
+});
+

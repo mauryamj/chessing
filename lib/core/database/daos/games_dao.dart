@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
+import '../../../features/history/models/game_summary.dart';
 
 extension GamesDao on AppDatabase {
   Future<List<Game>> getPendingSync() {
@@ -21,37 +22,87 @@ extension GamesDao on AppDatabase {
     );
   }
 
-  Future<void> upsertGameFromRemote(Map<String, dynamic> json) async {
-    final remoteIdVal = json['id'] as String;
-    final existing = await (select(games)..where((t) => t.remoteId.equals(remoteIdVal))).getSingleOrNull();
-    if (existing != null) return; // already exists
+  Future<void> markSynced(int localId, String remoteId) async {
+    await clearPendingSync(localId, remoteId);
+  }
 
-    // Insert game
-    final gameId = await into(games).insert(GamesCompanion.insert(
-      pgn: json['pgn'] ?? '',
-      result: json['result'] ?? '',
-      mode: json['mode'] ?? '',
-      botLevel: Value(json['bot_level']),
-      timeControlSeconds: Value(json['time_control_seconds']),
-      playedAt: json['played_at'] != null ? DateTime.parse(json['played_at']) : DateTime.now(),
-      playerAccuracy: Value(json['player_accuracy']),
-      remoteId: Value(remoteIdVal),
+  Future<bool> existsByRemoteId(String remoteId) async {
+    final game = await (select(games)..where((t) => t.remoteId.equals(remoteId))).getSingleOrNull();
+    return game != null;
+  }
+
+  Future<List<GameSummary>> getCompletedGames({int limit = 50}) async {
+    final rows = await (select(games)
+          ..where((t) => t.isActive.equals(false))
+          ..orderBy([(t) => OrderingTerm.desc(t.playedAt)])
+          ..limit(limit))
+        .get();
+
+    final List<GameSummary> summaries = [];
+    for (final row in rows) {
+      final moveRows = await getMovesForGame(row.id);
+      summaries.add(GameSummary(
+        remoteId: row.remoteId,
+        localId: row.id,
+        pgn: row.pgn,
+        result: row.result,
+        mode: row.mode,
+        botLevel: row.botLevel,
+        timeControlSeconds: row.timeControlSeconds,
+        playerAccuracy: row.playerAccuracy,
+        playerColorIndex: row.playerColorIndex,
+        playedAt: row.playedAt,
+        moves: moveRows
+            .map((m) => MoveSummary(
+                  ply: m.ply,
+                  uci: m.uci,
+                  san: m.san,
+                  evalCentipawns: m.evalCentipawns,
+                  classification: m.classification,
+                  bestMoveUci: m.bestMoveUci,
+                ))
+            .toList(),
+      ));
+    }
+    return summaries;
+  }
+
+  Future<void> insertFromRemote(GameSummary game) async {
+    if (game.remoteId != null) {
+      final exists = await existsByRemoteId(game.remoteId!);
+      if (exists) return;
+    }
+
+    final localId = await into(games).insert(GamesCompanion.insert(
+      remoteId: Value(game.remoteId),
+      fen: const Value(''),
+      pgn: game.pgn,
+      result: game.result ?? '',
+      mode: game.mode,
+      botLevel: Value(game.botLevel),
+      timeControlSeconds: Value(game.timeControlSeconds),
+      playerAccuracy: Value(game.playerAccuracy),
+      playedAt: game.playedAt,
+      playerColorIndex: Value(game.playerColorIndex),
       pendingSync: const Value(false),
+      isActive: const Value(false),
     ));
 
-    // Insert moves if present in JSON
-    final movesList = json['moves'] as List<dynamic>?;
-    if (movesList != null) {
-      for (final m in movesList) {
-        await into(moves).insert(MovesCompanion.insert(
-          gameId: gameId,
-          ply: m['ply'] ?? 0,
-          uci: m['uci'] ?? '',
-          san: m['san'] ?? '',
-          evalCentipawns: Value(m['eval_centipawns']),
-          classification: Value(m['classification']),
-        ));
-      }
+    for (final m in game.moves) {
+      await into(moves).insert(MovesCompanion.insert(
+        gameId: localId,
+        ply: m.ply,
+        uci: m.uci,
+        san: m.san,
+        evalCentipawns: Value(m.evalCentipawns),
+        classification: Value(m.classification),
+        bestMoveUci: Value(m.bestMoveUci),
+      ));
     }
+  }
+
+  Future<void> upsertGameFromRemote(Map<String, dynamic> json) async {
+    final summary = GameSummary.fromJson(json);
+    await insertFromRemote(summary);
   }
 }

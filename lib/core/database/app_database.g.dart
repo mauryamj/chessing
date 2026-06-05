@@ -80,6 +80,24 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("pending_sync" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _fenMeta = const VerificationMeta('fen');
+  @override
+  late final GeneratedColumn<String> fen = GeneratedColumn<String>(
+      'fen', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(
+          'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'));
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -92,7 +110,9 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
         playerAccuracy,
         playerColorIndex,
         remoteId,
-        pendingSync
+        pendingSync,
+        fen,
+        isActive
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -163,6 +183,14 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
           pendingSync.isAcceptableOrUnknown(
               data['pending_sync']!, _pendingSyncMeta));
     }
+    if (data.containsKey('fen')) {
+      context.handle(
+          _fenMeta, fen.isAcceptableOrUnknown(data['fen']!, _fenMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
     return context;
   }
 
@@ -194,6 +222,10 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
           .read(DriftSqlType.string, data['${effectivePrefix}remote_id']),
       pendingSync: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}pending_sync'])!,
+      fen: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}fen'])!,
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
     );
   }
 
@@ -215,6 +247,8 @@ class Game extends DataClass implements Insertable<Game> {
   final int playerColorIndex;
   final String? remoteId;
   final bool pendingSync;
+  final String fen;
+  final bool isActive;
   const Game(
       {required this.id,
       required this.pgn,
@@ -226,7 +260,9 @@ class Game extends DataClass implements Insertable<Game> {
       this.playerAccuracy,
       required this.playerColorIndex,
       this.remoteId,
-      required this.pendingSync});
+      required this.pendingSync,
+      required this.fen,
+      required this.isActive});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -249,6 +285,8 @@ class Game extends DataClass implements Insertable<Game> {
       map['remote_id'] = Variable<String>(remoteId);
     }
     map['pending_sync'] = Variable<bool>(pendingSync);
+    map['fen'] = Variable<String>(fen);
+    map['is_active'] = Variable<bool>(isActive);
     return map;
   }
 
@@ -273,6 +311,8 @@ class Game extends DataClass implements Insertable<Game> {
           ? const Value.absent()
           : Value(remoteId),
       pendingSync: Value(pendingSync),
+      fen: Value(fen),
+      isActive: Value(isActive),
     );
   }
 
@@ -291,6 +331,8 @@ class Game extends DataClass implements Insertable<Game> {
       playerColorIndex: serializer.fromJson<int>(json['playerColorIndex']),
       remoteId: serializer.fromJson<String?>(json['remoteId']),
       pendingSync: serializer.fromJson<bool>(json['pendingSync']),
+      fen: serializer.fromJson<String>(json['fen']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
     );
   }
   @override
@@ -308,6 +350,8 @@ class Game extends DataClass implements Insertable<Game> {
       'playerColorIndex': serializer.toJson<int>(playerColorIndex),
       'remoteId': serializer.toJson<String?>(remoteId),
       'pendingSync': serializer.toJson<bool>(pendingSync),
+      'fen': serializer.toJson<String>(fen),
+      'isActive': serializer.toJson<bool>(isActive),
     };
   }
 
@@ -322,7 +366,9 @@ class Game extends DataClass implements Insertable<Game> {
           Value<int?> playerAccuracy = const Value.absent(),
           int? playerColorIndex,
           Value<String?> remoteId = const Value.absent(),
-          bool? pendingSync}) =>
+          bool? pendingSync,
+          String? fen,
+          bool? isActive}) =>
       Game(
         id: id ?? this.id,
         pgn: pgn ?? this.pgn,
@@ -338,6 +384,8 @@ class Game extends DataClass implements Insertable<Game> {
         playerColorIndex: playerColorIndex ?? this.playerColorIndex,
         remoteId: remoteId.present ? remoteId.value : this.remoteId,
         pendingSync: pendingSync ?? this.pendingSync,
+        fen: fen ?? this.fen,
+        isActive: isActive ?? this.isActive,
       );
   Game copyWithCompanion(GamesCompanion data) {
     return Game(
@@ -359,6 +407,8 @@ class Game extends DataClass implements Insertable<Game> {
       remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       pendingSync:
           data.pendingSync.present ? data.pendingSync.value : this.pendingSync,
+      fen: data.fen.present ? data.fen.value : this.fen,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
     );
   }
 
@@ -375,7 +425,9 @@ class Game extends DataClass implements Insertable<Game> {
           ..write('playerAccuracy: $playerAccuracy, ')
           ..write('playerColorIndex: $playerColorIndex, ')
           ..write('remoteId: $remoteId, ')
-          ..write('pendingSync: $pendingSync')
+          ..write('pendingSync: $pendingSync, ')
+          ..write('fen: $fen, ')
+          ..write('isActive: $isActive')
           ..write(')'))
         .toString();
   }
@@ -392,7 +444,9 @@ class Game extends DataClass implements Insertable<Game> {
       playerAccuracy,
       playerColorIndex,
       remoteId,
-      pendingSync);
+      pendingSync,
+      fen,
+      isActive);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -407,7 +461,9 @@ class Game extends DataClass implements Insertable<Game> {
           other.playerAccuracy == this.playerAccuracy &&
           other.playerColorIndex == this.playerColorIndex &&
           other.remoteId == this.remoteId &&
-          other.pendingSync == this.pendingSync);
+          other.pendingSync == this.pendingSync &&
+          other.fen == this.fen &&
+          other.isActive == this.isActive);
 }
 
 class GamesCompanion extends UpdateCompanion<Game> {
@@ -422,6 +478,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
   final Value<int> playerColorIndex;
   final Value<String?> remoteId;
   final Value<bool> pendingSync;
+  final Value<String> fen;
+  final Value<bool> isActive;
   const GamesCompanion({
     this.id = const Value.absent(),
     this.pgn = const Value.absent(),
@@ -434,6 +492,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     this.playerColorIndex = const Value.absent(),
     this.remoteId = const Value.absent(),
     this.pendingSync = const Value.absent(),
+    this.fen = const Value.absent(),
+    this.isActive = const Value.absent(),
   });
   GamesCompanion.insert({
     this.id = const Value.absent(),
@@ -447,6 +507,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     this.playerColorIndex = const Value.absent(),
     this.remoteId = const Value.absent(),
     this.pendingSync = const Value.absent(),
+    this.fen = const Value.absent(),
+    this.isActive = const Value.absent(),
   })  : pgn = Value(pgn),
         result = Value(result),
         mode = Value(mode),
@@ -463,6 +525,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     Expression<int>? playerColorIndex,
     Expression<String>? remoteId,
     Expression<bool>? pendingSync,
+    Expression<String>? fen,
+    Expression<bool>? isActive,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -477,6 +541,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
       if (playerColorIndex != null) 'player_color_index': playerColorIndex,
       if (remoteId != null) 'remote_id': remoteId,
       if (pendingSync != null) 'pending_sync': pendingSync,
+      if (fen != null) 'fen': fen,
+      if (isActive != null) 'is_active': isActive,
     });
   }
 
@@ -491,7 +557,9 @@ class GamesCompanion extends UpdateCompanion<Game> {
       Value<int?>? playerAccuracy,
       Value<int>? playerColorIndex,
       Value<String?>? remoteId,
-      Value<bool>? pendingSync}) {
+      Value<bool>? pendingSync,
+      Value<String>? fen,
+      Value<bool>? isActive}) {
     return GamesCompanion(
       id: id ?? this.id,
       pgn: pgn ?? this.pgn,
@@ -504,6 +572,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
       playerColorIndex: playerColorIndex ?? this.playerColorIndex,
       remoteId: remoteId ?? this.remoteId,
       pendingSync: pendingSync ?? this.pendingSync,
+      fen: fen ?? this.fen,
+      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -543,6 +613,12 @@ class GamesCompanion extends UpdateCompanion<Game> {
     if (pendingSync.present) {
       map['pending_sync'] = Variable<bool>(pendingSync.value);
     }
+    if (fen.present) {
+      map['fen'] = Variable<String>(fen.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
     return map;
   }
 
@@ -559,7 +635,9 @@ class GamesCompanion extends UpdateCompanion<Game> {
           ..write('playerAccuracy: $playerAccuracy, ')
           ..write('playerColorIndex: $playerColorIndex, ')
           ..write('remoteId: $remoteId, ')
-          ..write('pendingSync: $pendingSync')
+          ..write('pendingSync: $pendingSync, ')
+          ..write('fen: $fen, ')
+          ..write('isActive: $isActive')
           ..write(')'))
         .toString();
   }
@@ -1527,17 +1605,1665 @@ class ProfileCompanion extends UpdateCompanion<ProfileData> {
   }
 }
 
+class $CacheMetaTable extends CacheMeta
+    with TableInfo<$CacheMetaTable, CacheMetaData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CacheMetaTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+      'key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _lastFetchedAtMeta =
+      const VerificationMeta('lastFetchedAt');
+  @override
+  late final GeneratedColumn<DateTime> lastFetchedAt =
+      GeneratedColumn<DateTime>('last_fetched_at', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _recordCountMeta =
+      const VerificationMeta('recordCount');
+  @override
+  late final GeneratedColumn<int> recordCount = GeneratedColumn<int>(
+      'record_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns => [key, lastFetchedAt, recordCount];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cache_meta';
+  @override
+  VerificationContext validateIntegrity(Insertable<CacheMetaData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+          _keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('last_fetched_at')) {
+      context.handle(
+          _lastFetchedAtMeta,
+          lastFetchedAt.isAcceptableOrUnknown(
+              data['last_fetched_at']!, _lastFetchedAtMeta));
+    } else if (isInserting) {
+      context.missing(_lastFetchedAtMeta);
+    }
+    if (data.containsKey('record_count')) {
+      context.handle(
+          _recordCountMeta,
+          recordCount.isAcceptableOrUnknown(
+              data['record_count']!, _recordCountMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  CacheMetaData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CacheMetaData(
+      key: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      lastFetchedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_fetched_at'])!,
+      recordCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}record_count'])!,
+    );
+  }
+
+  @override
+  $CacheMetaTable createAlias(String alias) {
+    return $CacheMetaTable(attachedDatabase, alias);
+  }
+}
+
+class CacheMetaData extends DataClass implements Insertable<CacheMetaData> {
+  final String key;
+  final DateTime lastFetchedAt;
+  final int recordCount;
+  const CacheMetaData(
+      {required this.key,
+      required this.lastFetchedAt,
+      required this.recordCount});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['last_fetched_at'] = Variable<DateTime>(lastFetchedAt);
+    map['record_count'] = Variable<int>(recordCount);
+    return map;
+  }
+
+  CacheMetaCompanion toCompanion(bool nullToAbsent) {
+    return CacheMetaCompanion(
+      key: Value(key),
+      lastFetchedAt: Value(lastFetchedAt),
+      recordCount: Value(recordCount),
+    );
+  }
+
+  factory CacheMetaData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CacheMetaData(
+      key: serializer.fromJson<String>(json['key']),
+      lastFetchedAt: serializer.fromJson<DateTime>(json['lastFetchedAt']),
+      recordCount: serializer.fromJson<int>(json['recordCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'lastFetchedAt': serializer.toJson<DateTime>(lastFetchedAt),
+      'recordCount': serializer.toJson<int>(recordCount),
+    };
+  }
+
+  CacheMetaData copyWith(
+          {String? key, DateTime? lastFetchedAt, int? recordCount}) =>
+      CacheMetaData(
+        key: key ?? this.key,
+        lastFetchedAt: lastFetchedAt ?? this.lastFetchedAt,
+        recordCount: recordCount ?? this.recordCount,
+      );
+  CacheMetaData copyWithCompanion(CacheMetaCompanion data) {
+    return CacheMetaData(
+      key: data.key.present ? data.key.value : this.key,
+      lastFetchedAt: data.lastFetchedAt.present
+          ? data.lastFetchedAt.value
+          : this.lastFetchedAt,
+      recordCount:
+          data.recordCount.present ? data.recordCount.value : this.recordCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CacheMetaData(')
+          ..write('key: $key, ')
+          ..write('lastFetchedAt: $lastFetchedAt, ')
+          ..write('recordCount: $recordCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(key, lastFetchedAt, recordCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CacheMetaData &&
+          other.key == this.key &&
+          other.lastFetchedAt == this.lastFetchedAt &&
+          other.recordCount == this.recordCount);
+}
+
+class CacheMetaCompanion extends UpdateCompanion<CacheMetaData> {
+  final Value<String> key;
+  final Value<DateTime> lastFetchedAt;
+  final Value<int> recordCount;
+  final Value<int> rowid;
+  const CacheMetaCompanion({
+    this.key = const Value.absent(),
+    this.lastFetchedAt = const Value.absent(),
+    this.recordCount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CacheMetaCompanion.insert({
+    required String key,
+    required DateTime lastFetchedAt,
+    this.recordCount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : key = Value(key),
+        lastFetchedAt = Value(lastFetchedAt);
+  static Insertable<CacheMetaData> custom({
+    Expression<String>? key,
+    Expression<DateTime>? lastFetchedAt,
+    Expression<int>? recordCount,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (lastFetchedAt != null) 'last_fetched_at': lastFetchedAt,
+      if (recordCount != null) 'record_count': recordCount,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CacheMetaCompanion copyWith(
+      {Value<String>? key,
+      Value<DateTime>? lastFetchedAt,
+      Value<int>? recordCount,
+      Value<int>? rowid}) {
+    return CacheMetaCompanion(
+      key: key ?? this.key,
+      lastFetchedAt: lastFetchedAt ?? this.lastFetchedAt,
+      recordCount: recordCount ?? this.recordCount,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (lastFetchedAt.present) {
+      map['last_fetched_at'] = Variable<DateTime>(lastFetchedAt.value);
+    }
+    if (recordCount.present) {
+      map['record_count'] = Variable<int>(recordCount.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CacheMetaCompanion(')
+          ..write('key: $key, ')
+          ..write('lastFetchedAt: $lastFetchedAt, ')
+          ..write('recordCount: $recordCount, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TheoryEntriesTable extends TheoryEntries
+    with TableInfo<$TheoryEntriesTable, LocalTheoryEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TheoryEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _phaseMeta = const VerificationMeta('phase');
+  @override
+  late final GeneratedColumn<String> phase = GeneratedColumn<String>(
+      'phase', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subtitleMeta =
+      const VerificationMeta('subtitle');
+  @override
+  late final GeneratedColumn<String> subtitle = GeneratedColumn<String>(
+      'subtitle', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _summaryMeta =
+      const VerificationMeta('summary');
+  @override
+  late final GeneratedColumn<String> summary = GeneratedColumn<String>(
+      'summary', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _movesJsonMeta =
+      const VerificationMeta('movesJson');
+  @override
+  late final GeneratedColumn<String> movesJson = GeneratedColumn<String>(
+      'moves_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _keyIdeasJsonMeta =
+      const VerificationMeta('keyIdeasJson');
+  @override
+  late final GeneratedColumn<String> keyIdeasJson = GeneratedColumn<String>(
+      'key_ideas_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _variationsJsonMeta =
+      const VerificationMeta('variationsJson');
+  @override
+  late final GeneratedColumn<String> variationsJson = GeneratedColumn<String>(
+      'variations_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _difficultyMeta =
+      const VerificationMeta('difficulty');
+  @override
+  late final GeneratedColumn<String> difficulty = GeneratedColumn<String>(
+      'difficulty', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tagsJsonMeta =
+      const VerificationMeta('tagsJson');
+  @override
+  late final GeneratedColumn<String> tagsJson = GeneratedColumn<String>(
+      'tags_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sortOrderMeta =
+      const VerificationMeta('sortOrder');
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+      'sort_order', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        phase,
+        title,
+        subtitle,
+        summary,
+        movesJson,
+        keyIdeasJson,
+        variationsJson,
+        difficulty,
+        tagsJson,
+        sortOrder
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'theory_entries';
+  @override
+  VerificationContext validateIntegrity(Insertable<LocalTheoryEntry> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('phase')) {
+      context.handle(
+          _phaseMeta, phase.isAcceptableOrUnknown(data['phase']!, _phaseMeta));
+    } else if (isInserting) {
+      context.missing(_phaseMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('subtitle')) {
+      context.handle(_subtitleMeta,
+          subtitle.isAcceptableOrUnknown(data['subtitle']!, _subtitleMeta));
+    }
+    if (data.containsKey('summary')) {
+      context.handle(_summaryMeta,
+          summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta));
+    } else if (isInserting) {
+      context.missing(_summaryMeta);
+    }
+    if (data.containsKey('moves_json')) {
+      context.handle(_movesJsonMeta,
+          movesJson.isAcceptableOrUnknown(data['moves_json']!, _movesJsonMeta));
+    } else if (isInserting) {
+      context.missing(_movesJsonMeta);
+    }
+    if (data.containsKey('key_ideas_json')) {
+      context.handle(
+          _keyIdeasJsonMeta,
+          keyIdeasJson.isAcceptableOrUnknown(
+              data['key_ideas_json']!, _keyIdeasJsonMeta));
+    } else if (isInserting) {
+      context.missing(_keyIdeasJsonMeta);
+    }
+    if (data.containsKey('variations_json')) {
+      context.handle(
+          _variationsJsonMeta,
+          variationsJson.isAcceptableOrUnknown(
+              data['variations_json']!, _variationsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_variationsJsonMeta);
+    }
+    if (data.containsKey('difficulty')) {
+      context.handle(
+          _difficultyMeta,
+          difficulty.isAcceptableOrUnknown(
+              data['difficulty']!, _difficultyMeta));
+    } else if (isInserting) {
+      context.missing(_difficultyMeta);
+    }
+    if (data.containsKey('tags_json')) {
+      context.handle(_tagsJsonMeta,
+          tagsJson.isAcceptableOrUnknown(data['tags_json']!, _tagsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_tagsJsonMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(_sortOrderMeta,
+          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
+    } else if (isInserting) {
+      context.missing(_sortOrderMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LocalTheoryEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalTheoryEntry(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      phase: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}phase'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      subtitle: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subtitle']),
+      summary: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}summary'])!,
+      movesJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}moves_json'])!,
+      keyIdeasJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key_ideas_json'])!,
+      variationsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}variations_json'])!,
+      difficulty: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}difficulty'])!,
+      tagsJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tags_json'])!,
+      sortOrder: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
+    );
+  }
+
+  @override
+  $TheoryEntriesTable createAlias(String alias) {
+    return $TheoryEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class LocalTheoryEntry extends DataClass
+    implements Insertable<LocalTheoryEntry> {
+  final String id;
+  final String phase;
+  final String title;
+  final String? subtitle;
+  final String summary;
+  final String movesJson;
+  final String keyIdeasJson;
+  final String variationsJson;
+  final String difficulty;
+  final String tagsJson;
+  final int sortOrder;
+  const LocalTheoryEntry(
+      {required this.id,
+      required this.phase,
+      required this.title,
+      this.subtitle,
+      required this.summary,
+      required this.movesJson,
+      required this.keyIdeasJson,
+      required this.variationsJson,
+      required this.difficulty,
+      required this.tagsJson,
+      required this.sortOrder});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['phase'] = Variable<String>(phase);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || subtitle != null) {
+      map['subtitle'] = Variable<String>(subtitle);
+    }
+    map['summary'] = Variable<String>(summary);
+    map['moves_json'] = Variable<String>(movesJson);
+    map['key_ideas_json'] = Variable<String>(keyIdeasJson);
+    map['variations_json'] = Variable<String>(variationsJson);
+    map['difficulty'] = Variable<String>(difficulty);
+    map['tags_json'] = Variable<String>(tagsJson);
+    map['sort_order'] = Variable<int>(sortOrder);
+    return map;
+  }
+
+  TheoryEntriesCompanion toCompanion(bool nullToAbsent) {
+    return TheoryEntriesCompanion(
+      id: Value(id),
+      phase: Value(phase),
+      title: Value(title),
+      subtitle: subtitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subtitle),
+      summary: Value(summary),
+      movesJson: Value(movesJson),
+      keyIdeasJson: Value(keyIdeasJson),
+      variationsJson: Value(variationsJson),
+      difficulty: Value(difficulty),
+      tagsJson: Value(tagsJson),
+      sortOrder: Value(sortOrder),
+    );
+  }
+
+  factory LocalTheoryEntry.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalTheoryEntry(
+      id: serializer.fromJson<String>(json['id']),
+      phase: serializer.fromJson<String>(json['phase']),
+      title: serializer.fromJson<String>(json['title']),
+      subtitle: serializer.fromJson<String?>(json['subtitle']),
+      summary: serializer.fromJson<String>(json['summary']),
+      movesJson: serializer.fromJson<String>(json['movesJson']),
+      keyIdeasJson: serializer.fromJson<String>(json['keyIdeasJson']),
+      variationsJson: serializer.fromJson<String>(json['variationsJson']),
+      difficulty: serializer.fromJson<String>(json['difficulty']),
+      tagsJson: serializer.fromJson<String>(json['tagsJson']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'phase': serializer.toJson<String>(phase),
+      'title': serializer.toJson<String>(title),
+      'subtitle': serializer.toJson<String?>(subtitle),
+      'summary': serializer.toJson<String>(summary),
+      'movesJson': serializer.toJson<String>(movesJson),
+      'keyIdeasJson': serializer.toJson<String>(keyIdeasJson),
+      'variationsJson': serializer.toJson<String>(variationsJson),
+      'difficulty': serializer.toJson<String>(difficulty),
+      'tagsJson': serializer.toJson<String>(tagsJson),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+    };
+  }
+
+  LocalTheoryEntry copyWith(
+          {String? id,
+          String? phase,
+          String? title,
+          Value<String?> subtitle = const Value.absent(),
+          String? summary,
+          String? movesJson,
+          String? keyIdeasJson,
+          String? variationsJson,
+          String? difficulty,
+          String? tagsJson,
+          int? sortOrder}) =>
+      LocalTheoryEntry(
+        id: id ?? this.id,
+        phase: phase ?? this.phase,
+        title: title ?? this.title,
+        subtitle: subtitle.present ? subtitle.value : this.subtitle,
+        summary: summary ?? this.summary,
+        movesJson: movesJson ?? this.movesJson,
+        keyIdeasJson: keyIdeasJson ?? this.keyIdeasJson,
+        variationsJson: variationsJson ?? this.variationsJson,
+        difficulty: difficulty ?? this.difficulty,
+        tagsJson: tagsJson ?? this.tagsJson,
+        sortOrder: sortOrder ?? this.sortOrder,
+      );
+  LocalTheoryEntry copyWithCompanion(TheoryEntriesCompanion data) {
+    return LocalTheoryEntry(
+      id: data.id.present ? data.id.value : this.id,
+      phase: data.phase.present ? data.phase.value : this.phase,
+      title: data.title.present ? data.title.value : this.title,
+      subtitle: data.subtitle.present ? data.subtitle.value : this.subtitle,
+      summary: data.summary.present ? data.summary.value : this.summary,
+      movesJson: data.movesJson.present ? data.movesJson.value : this.movesJson,
+      keyIdeasJson: data.keyIdeasJson.present
+          ? data.keyIdeasJson.value
+          : this.keyIdeasJson,
+      variationsJson: data.variationsJson.present
+          ? data.variationsJson.value
+          : this.variationsJson,
+      difficulty:
+          data.difficulty.present ? data.difficulty.value : this.difficulty,
+      tagsJson: data.tagsJson.present ? data.tagsJson.value : this.tagsJson,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalTheoryEntry(')
+          ..write('id: $id, ')
+          ..write('phase: $phase, ')
+          ..write('title: $title, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('summary: $summary, ')
+          ..write('movesJson: $movesJson, ')
+          ..write('keyIdeasJson: $keyIdeasJson, ')
+          ..write('variationsJson: $variationsJson, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('tagsJson: $tagsJson, ')
+          ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, phase, title, subtitle, summary,
+      movesJson, keyIdeasJson, variationsJson, difficulty, tagsJson, sortOrder);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalTheoryEntry &&
+          other.id == this.id &&
+          other.phase == this.phase &&
+          other.title == this.title &&
+          other.subtitle == this.subtitle &&
+          other.summary == this.summary &&
+          other.movesJson == this.movesJson &&
+          other.keyIdeasJson == this.keyIdeasJson &&
+          other.variationsJson == this.variationsJson &&
+          other.difficulty == this.difficulty &&
+          other.tagsJson == this.tagsJson &&
+          other.sortOrder == this.sortOrder);
+}
+
+class TheoryEntriesCompanion extends UpdateCompanion<LocalTheoryEntry> {
+  final Value<String> id;
+  final Value<String> phase;
+  final Value<String> title;
+  final Value<String?> subtitle;
+  final Value<String> summary;
+  final Value<String> movesJson;
+  final Value<String> keyIdeasJson;
+  final Value<String> variationsJson;
+  final Value<String> difficulty;
+  final Value<String> tagsJson;
+  final Value<int> sortOrder;
+  final Value<int> rowid;
+  const TheoryEntriesCompanion({
+    this.id = const Value.absent(),
+    this.phase = const Value.absent(),
+    this.title = const Value.absent(),
+    this.subtitle = const Value.absent(),
+    this.summary = const Value.absent(),
+    this.movesJson = const Value.absent(),
+    this.keyIdeasJson = const Value.absent(),
+    this.variationsJson = const Value.absent(),
+    this.difficulty = const Value.absent(),
+    this.tagsJson = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TheoryEntriesCompanion.insert({
+    required String id,
+    required String phase,
+    required String title,
+    this.subtitle = const Value.absent(),
+    required String summary,
+    required String movesJson,
+    required String keyIdeasJson,
+    required String variationsJson,
+    required String difficulty,
+    required String tagsJson,
+    required int sortOrder,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        phase = Value(phase),
+        title = Value(title),
+        summary = Value(summary),
+        movesJson = Value(movesJson),
+        keyIdeasJson = Value(keyIdeasJson),
+        variationsJson = Value(variationsJson),
+        difficulty = Value(difficulty),
+        tagsJson = Value(tagsJson),
+        sortOrder = Value(sortOrder);
+  static Insertable<LocalTheoryEntry> custom({
+    Expression<String>? id,
+    Expression<String>? phase,
+    Expression<String>? title,
+    Expression<String>? subtitle,
+    Expression<String>? summary,
+    Expression<String>? movesJson,
+    Expression<String>? keyIdeasJson,
+    Expression<String>? variationsJson,
+    Expression<String>? difficulty,
+    Expression<String>? tagsJson,
+    Expression<int>? sortOrder,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (phase != null) 'phase': phase,
+      if (title != null) 'title': title,
+      if (subtitle != null) 'subtitle': subtitle,
+      if (summary != null) 'summary': summary,
+      if (movesJson != null) 'moves_json': movesJson,
+      if (keyIdeasJson != null) 'key_ideas_json': keyIdeasJson,
+      if (variationsJson != null) 'variations_json': variationsJson,
+      if (difficulty != null) 'difficulty': difficulty,
+      if (tagsJson != null) 'tags_json': tagsJson,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TheoryEntriesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? phase,
+      Value<String>? title,
+      Value<String?>? subtitle,
+      Value<String>? summary,
+      Value<String>? movesJson,
+      Value<String>? keyIdeasJson,
+      Value<String>? variationsJson,
+      Value<String>? difficulty,
+      Value<String>? tagsJson,
+      Value<int>? sortOrder,
+      Value<int>? rowid}) {
+    return TheoryEntriesCompanion(
+      id: id ?? this.id,
+      phase: phase ?? this.phase,
+      title: title ?? this.title,
+      subtitle: subtitle ?? this.subtitle,
+      summary: summary ?? this.summary,
+      movesJson: movesJson ?? this.movesJson,
+      keyIdeasJson: keyIdeasJson ?? this.keyIdeasJson,
+      variationsJson: variationsJson ?? this.variationsJson,
+      difficulty: difficulty ?? this.difficulty,
+      tagsJson: tagsJson ?? this.tagsJson,
+      sortOrder: sortOrder ?? this.sortOrder,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (phase.present) {
+      map['phase'] = Variable<String>(phase.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (subtitle.present) {
+      map['subtitle'] = Variable<String>(subtitle.value);
+    }
+    if (summary.present) {
+      map['summary'] = Variable<String>(summary.value);
+    }
+    if (movesJson.present) {
+      map['moves_json'] = Variable<String>(movesJson.value);
+    }
+    if (keyIdeasJson.present) {
+      map['key_ideas_json'] = Variable<String>(keyIdeasJson.value);
+    }
+    if (variationsJson.present) {
+      map['variations_json'] = Variable<String>(variationsJson.value);
+    }
+    if (difficulty.present) {
+      map['difficulty'] = Variable<String>(difficulty.value);
+    }
+    if (tagsJson.present) {
+      map['tags_json'] = Variable<String>(tagsJson.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TheoryEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('phase: $phase, ')
+          ..write('title: $title, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('summary: $summary, ')
+          ..write('movesJson: $movesJson, ')
+          ..write('keyIdeasJson: $keyIdeasJson, ')
+          ..write('variationsJson: $variationsJson, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('tagsJson: $tagsJson, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TheoryUserDataTable extends TheoryUserData
+    with TableInfo<$TheoryUserDataTable, LocalTheoryUserData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TheoryUserDataTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _theoryIdMeta =
+      const VerificationMeta('theoryId');
+  @override
+  late final GeneratedColumn<String> theoryId = GeneratedColumn<String>(
+      'theory_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _isBookmarkedMeta =
+      const VerificationMeta('isBookmarked');
+  @override
+  late final GeneratedColumn<bool> isBookmarked = GeneratedColumn<bool>(
+      'is_bookmarked', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_bookmarked" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isCompletedMeta =
+      const VerificationMeta('isCompleted');
+  @override
+  late final GeneratedColumn<bool> isCompleted = GeneratedColumn<bool>(
+      'is_completed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_completed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [theoryId, isBookmarked, isCompleted, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'theory_user_data';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<LocalTheoryUserData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('theory_id')) {
+      context.handle(_theoryIdMeta,
+          theoryId.isAcceptableOrUnknown(data['theory_id']!, _theoryIdMeta));
+    } else if (isInserting) {
+      context.missing(_theoryIdMeta);
+    }
+    if (data.containsKey('is_bookmarked')) {
+      context.handle(
+          _isBookmarkedMeta,
+          isBookmarked.isAcceptableOrUnknown(
+              data['is_bookmarked']!, _isBookmarkedMeta));
+    }
+    if (data.containsKey('is_completed')) {
+      context.handle(
+          _isCompletedMeta,
+          isCompleted.isAcceptableOrUnknown(
+              data['is_completed']!, _isCompletedMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {theoryId};
+  @override
+  LocalTheoryUserData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalTheoryUserData(
+      theoryId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}theory_id'])!,
+      isBookmarked: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_bookmarked'])!,
+      isCompleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_completed'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $TheoryUserDataTable createAlias(String alias) {
+    return $TheoryUserDataTable(attachedDatabase, alias);
+  }
+}
+
+class LocalTheoryUserData extends DataClass
+    implements Insertable<LocalTheoryUserData> {
+  final String theoryId;
+  final bool isBookmarked;
+  final bool isCompleted;
+  final DateTime updatedAt;
+  const LocalTheoryUserData(
+      {required this.theoryId,
+      required this.isBookmarked,
+      required this.isCompleted,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['theory_id'] = Variable<String>(theoryId);
+    map['is_bookmarked'] = Variable<bool>(isBookmarked);
+    map['is_completed'] = Variable<bool>(isCompleted);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  TheoryUserDataCompanion toCompanion(bool nullToAbsent) {
+    return TheoryUserDataCompanion(
+      theoryId: Value(theoryId),
+      isBookmarked: Value(isBookmarked),
+      isCompleted: Value(isCompleted),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory LocalTheoryUserData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalTheoryUserData(
+      theoryId: serializer.fromJson<String>(json['theoryId']),
+      isBookmarked: serializer.fromJson<bool>(json['isBookmarked']),
+      isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'theoryId': serializer.toJson<String>(theoryId),
+      'isBookmarked': serializer.toJson<bool>(isBookmarked),
+      'isCompleted': serializer.toJson<bool>(isCompleted),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  LocalTheoryUserData copyWith(
+          {String? theoryId,
+          bool? isBookmarked,
+          bool? isCompleted,
+          DateTime? updatedAt}) =>
+      LocalTheoryUserData(
+        theoryId: theoryId ?? this.theoryId,
+        isBookmarked: isBookmarked ?? this.isBookmarked,
+        isCompleted: isCompleted ?? this.isCompleted,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  LocalTheoryUserData copyWithCompanion(TheoryUserDataCompanion data) {
+    return LocalTheoryUserData(
+      theoryId: data.theoryId.present ? data.theoryId.value : this.theoryId,
+      isBookmarked: data.isBookmarked.present
+          ? data.isBookmarked.value
+          : this.isBookmarked,
+      isCompleted:
+          data.isCompleted.present ? data.isCompleted.value : this.isCompleted,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalTheoryUserData(')
+          ..write('theoryId: $theoryId, ')
+          ..write('isBookmarked: $isBookmarked, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(theoryId, isBookmarked, isCompleted, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalTheoryUserData &&
+          other.theoryId == this.theoryId &&
+          other.isBookmarked == this.isBookmarked &&
+          other.isCompleted == this.isCompleted &&
+          other.updatedAt == this.updatedAt);
+}
+
+class TheoryUserDataCompanion extends UpdateCompanion<LocalTheoryUserData> {
+  final Value<String> theoryId;
+  final Value<bool> isBookmarked;
+  final Value<bool> isCompleted;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const TheoryUserDataCompanion({
+    this.theoryId = const Value.absent(),
+    this.isBookmarked = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TheoryUserDataCompanion.insert({
+    required String theoryId,
+    this.isBookmarked = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : theoryId = Value(theoryId),
+        updatedAt = Value(updatedAt);
+  static Insertable<LocalTheoryUserData> custom({
+    Expression<String>? theoryId,
+    Expression<bool>? isBookmarked,
+    Expression<bool>? isCompleted,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (theoryId != null) 'theory_id': theoryId,
+      if (isBookmarked != null) 'is_bookmarked': isBookmarked,
+      if (isCompleted != null) 'is_completed': isCompleted,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TheoryUserDataCompanion copyWith(
+      {Value<String>? theoryId,
+      Value<bool>? isBookmarked,
+      Value<bool>? isCompleted,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return TheoryUserDataCompanion(
+      theoryId: theoryId ?? this.theoryId,
+      isBookmarked: isBookmarked ?? this.isBookmarked,
+      isCompleted: isCompleted ?? this.isCompleted,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (theoryId.present) {
+      map['theory_id'] = Variable<String>(theoryId.value);
+    }
+    if (isBookmarked.present) {
+      map['is_bookmarked'] = Variable<bool>(isBookmarked.value);
+    }
+    if (isCompleted.present) {
+      map['is_completed'] = Variable<bool>(isCompleted.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TheoryUserDataCompanion(')
+          ..write('theoryId: $theoryId, ')
+          ..write('isBookmarked: $isBookmarked, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HistoricalMatchesTable extends HistoricalMatches
+    with TableInfo<$HistoricalMatchesTable, LocalHistoricalMatch> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HistoricalMatchesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _whitePlayerMeta =
+      const VerificationMeta('whitePlayer');
+  @override
+  late final GeneratedColumn<String> whitePlayer = GeneratedColumn<String>(
+      'white_player', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _blackPlayerMeta =
+      const VerificationMeta('blackPlayer');
+  @override
+  late final GeneratedColumn<String> blackPlayer = GeneratedColumn<String>(
+      'black_player', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _eventMeta = const VerificationMeta('event');
+  @override
+  late final GeneratedColumn<String> event = GeneratedColumn<String>(
+      'event', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _yearMeta = const VerificationMeta('year');
+  @override
+  late final GeneratedColumn<int> year = GeneratedColumn<int>(
+      'year', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _resultMeta = const VerificationMeta('result');
+  @override
+  late final GeneratedColumn<String> result = GeneratedColumn<String>(
+      'result', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _pgnMeta = const VerificationMeta('pgn');
+  @override
+  late final GeneratedColumn<String> pgn = GeneratedColumn<String>(
+      'pgn', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tagsJsonMeta =
+      const VerificationMeta('tagsJson');
+  @override
+  late final GeneratedColumn<String> tagsJson = GeneratedColumn<String>(
+      'tags_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _difficultyMeta =
+      const VerificationMeta('difficulty');
+  @override
+  late final GeneratedColumn<String> difficulty = GeneratedColumn<String>(
+      'difficulty', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sortOrderMeta =
+      const VerificationMeta('sortOrder');
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+      'sort_order', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        whitePlayer,
+        blackPlayer,
+        event,
+        year,
+        result,
+        pgn,
+        description,
+        tagsJson,
+        difficulty,
+        sortOrder
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'historical_matches';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<LocalHistoricalMatch> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('white_player')) {
+      context.handle(
+          _whitePlayerMeta,
+          whitePlayer.isAcceptableOrUnknown(
+              data['white_player']!, _whitePlayerMeta));
+    } else if (isInserting) {
+      context.missing(_whitePlayerMeta);
+    }
+    if (data.containsKey('black_player')) {
+      context.handle(
+          _blackPlayerMeta,
+          blackPlayer.isAcceptableOrUnknown(
+              data['black_player']!, _blackPlayerMeta));
+    } else if (isInserting) {
+      context.missing(_blackPlayerMeta);
+    }
+    if (data.containsKey('event')) {
+      context.handle(
+          _eventMeta, event.isAcceptableOrUnknown(data['event']!, _eventMeta));
+    } else if (isInserting) {
+      context.missing(_eventMeta);
+    }
+    if (data.containsKey('year')) {
+      context.handle(
+          _yearMeta, year.isAcceptableOrUnknown(data['year']!, _yearMeta));
+    } else if (isInserting) {
+      context.missing(_yearMeta);
+    }
+    if (data.containsKey('result')) {
+      context.handle(_resultMeta,
+          result.isAcceptableOrUnknown(data['result']!, _resultMeta));
+    } else if (isInserting) {
+      context.missing(_resultMeta);
+    }
+    if (data.containsKey('pgn')) {
+      context.handle(
+          _pgnMeta, pgn.isAcceptableOrUnknown(data['pgn']!, _pgnMeta));
+    } else if (isInserting) {
+      context.missing(_pgnMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('tags_json')) {
+      context.handle(_tagsJsonMeta,
+          tagsJson.isAcceptableOrUnknown(data['tags_json']!, _tagsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_tagsJsonMeta);
+    }
+    if (data.containsKey('difficulty')) {
+      context.handle(
+          _difficultyMeta,
+          difficulty.isAcceptableOrUnknown(
+              data['difficulty']!, _difficultyMeta));
+    } else if (isInserting) {
+      context.missing(_difficultyMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(_sortOrderMeta,
+          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
+    } else if (isInserting) {
+      context.missing(_sortOrderMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LocalHistoricalMatch map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalHistoricalMatch(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      whitePlayer: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}white_player'])!,
+      blackPlayer: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}black_player'])!,
+      event: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}event'])!,
+      year: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}year'])!,
+      result: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}result'])!,
+      pgn: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}pgn'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      tagsJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tags_json'])!,
+      difficulty: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}difficulty'])!,
+      sortOrder: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
+    );
+  }
+
+  @override
+  $HistoricalMatchesTable createAlias(String alias) {
+    return $HistoricalMatchesTable(attachedDatabase, alias);
+  }
+}
+
+class LocalHistoricalMatch extends DataClass
+    implements Insertable<LocalHistoricalMatch> {
+  final String id;
+  final String whitePlayer;
+  final String blackPlayer;
+  final String event;
+  final int year;
+  final String result;
+  final String pgn;
+  final String description;
+  final String tagsJson;
+  final String difficulty;
+  final int sortOrder;
+  const LocalHistoricalMatch(
+      {required this.id,
+      required this.whitePlayer,
+      required this.blackPlayer,
+      required this.event,
+      required this.year,
+      required this.result,
+      required this.pgn,
+      required this.description,
+      required this.tagsJson,
+      required this.difficulty,
+      required this.sortOrder});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['white_player'] = Variable<String>(whitePlayer);
+    map['black_player'] = Variable<String>(blackPlayer);
+    map['event'] = Variable<String>(event);
+    map['year'] = Variable<int>(year);
+    map['result'] = Variable<String>(result);
+    map['pgn'] = Variable<String>(pgn);
+    map['description'] = Variable<String>(description);
+    map['tags_json'] = Variable<String>(tagsJson);
+    map['difficulty'] = Variable<String>(difficulty);
+    map['sort_order'] = Variable<int>(sortOrder);
+    return map;
+  }
+
+  HistoricalMatchesCompanion toCompanion(bool nullToAbsent) {
+    return HistoricalMatchesCompanion(
+      id: Value(id),
+      whitePlayer: Value(whitePlayer),
+      blackPlayer: Value(blackPlayer),
+      event: Value(event),
+      year: Value(year),
+      result: Value(result),
+      pgn: Value(pgn),
+      description: Value(description),
+      tagsJson: Value(tagsJson),
+      difficulty: Value(difficulty),
+      sortOrder: Value(sortOrder),
+    );
+  }
+
+  factory LocalHistoricalMatch.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalHistoricalMatch(
+      id: serializer.fromJson<String>(json['id']),
+      whitePlayer: serializer.fromJson<String>(json['whitePlayer']),
+      blackPlayer: serializer.fromJson<String>(json['blackPlayer']),
+      event: serializer.fromJson<String>(json['event']),
+      year: serializer.fromJson<int>(json['year']),
+      result: serializer.fromJson<String>(json['result']),
+      pgn: serializer.fromJson<String>(json['pgn']),
+      description: serializer.fromJson<String>(json['description']),
+      tagsJson: serializer.fromJson<String>(json['tagsJson']),
+      difficulty: serializer.fromJson<String>(json['difficulty']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'whitePlayer': serializer.toJson<String>(whitePlayer),
+      'blackPlayer': serializer.toJson<String>(blackPlayer),
+      'event': serializer.toJson<String>(event),
+      'year': serializer.toJson<int>(year),
+      'result': serializer.toJson<String>(result),
+      'pgn': serializer.toJson<String>(pgn),
+      'description': serializer.toJson<String>(description),
+      'tagsJson': serializer.toJson<String>(tagsJson),
+      'difficulty': serializer.toJson<String>(difficulty),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+    };
+  }
+
+  LocalHistoricalMatch copyWith(
+          {String? id,
+          String? whitePlayer,
+          String? blackPlayer,
+          String? event,
+          int? year,
+          String? result,
+          String? pgn,
+          String? description,
+          String? tagsJson,
+          String? difficulty,
+          int? sortOrder}) =>
+      LocalHistoricalMatch(
+        id: id ?? this.id,
+        whitePlayer: whitePlayer ?? this.whitePlayer,
+        blackPlayer: blackPlayer ?? this.blackPlayer,
+        event: event ?? this.event,
+        year: year ?? this.year,
+        result: result ?? this.result,
+        pgn: pgn ?? this.pgn,
+        description: description ?? this.description,
+        tagsJson: tagsJson ?? this.tagsJson,
+        difficulty: difficulty ?? this.difficulty,
+        sortOrder: sortOrder ?? this.sortOrder,
+      );
+  LocalHistoricalMatch copyWithCompanion(HistoricalMatchesCompanion data) {
+    return LocalHistoricalMatch(
+      id: data.id.present ? data.id.value : this.id,
+      whitePlayer:
+          data.whitePlayer.present ? data.whitePlayer.value : this.whitePlayer,
+      blackPlayer:
+          data.blackPlayer.present ? data.blackPlayer.value : this.blackPlayer,
+      event: data.event.present ? data.event.value : this.event,
+      year: data.year.present ? data.year.value : this.year,
+      result: data.result.present ? data.result.value : this.result,
+      pgn: data.pgn.present ? data.pgn.value : this.pgn,
+      description:
+          data.description.present ? data.description.value : this.description,
+      tagsJson: data.tagsJson.present ? data.tagsJson.value : this.tagsJson,
+      difficulty:
+          data.difficulty.present ? data.difficulty.value : this.difficulty,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalHistoricalMatch(')
+          ..write('id: $id, ')
+          ..write('whitePlayer: $whitePlayer, ')
+          ..write('blackPlayer: $blackPlayer, ')
+          ..write('event: $event, ')
+          ..write('year: $year, ')
+          ..write('result: $result, ')
+          ..write('pgn: $pgn, ')
+          ..write('description: $description, ')
+          ..write('tagsJson: $tagsJson, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, whitePlayer, blackPlayer, event, year,
+      result, pgn, description, tagsJson, difficulty, sortOrder);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalHistoricalMatch &&
+          other.id == this.id &&
+          other.whitePlayer == this.whitePlayer &&
+          other.blackPlayer == this.blackPlayer &&
+          other.event == this.event &&
+          other.year == this.year &&
+          other.result == this.result &&
+          other.pgn == this.pgn &&
+          other.description == this.description &&
+          other.tagsJson == this.tagsJson &&
+          other.difficulty == this.difficulty &&
+          other.sortOrder == this.sortOrder);
+}
+
+class HistoricalMatchesCompanion extends UpdateCompanion<LocalHistoricalMatch> {
+  final Value<String> id;
+  final Value<String> whitePlayer;
+  final Value<String> blackPlayer;
+  final Value<String> event;
+  final Value<int> year;
+  final Value<String> result;
+  final Value<String> pgn;
+  final Value<String> description;
+  final Value<String> tagsJson;
+  final Value<String> difficulty;
+  final Value<int> sortOrder;
+  final Value<int> rowid;
+  const HistoricalMatchesCompanion({
+    this.id = const Value.absent(),
+    this.whitePlayer = const Value.absent(),
+    this.blackPlayer = const Value.absent(),
+    this.event = const Value.absent(),
+    this.year = const Value.absent(),
+    this.result = const Value.absent(),
+    this.pgn = const Value.absent(),
+    this.description = const Value.absent(),
+    this.tagsJson = const Value.absent(),
+    this.difficulty = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HistoricalMatchesCompanion.insert({
+    required String id,
+    required String whitePlayer,
+    required String blackPlayer,
+    required String event,
+    required int year,
+    required String result,
+    required String pgn,
+    required String description,
+    required String tagsJson,
+    required String difficulty,
+    required int sortOrder,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        whitePlayer = Value(whitePlayer),
+        blackPlayer = Value(blackPlayer),
+        event = Value(event),
+        year = Value(year),
+        result = Value(result),
+        pgn = Value(pgn),
+        description = Value(description),
+        tagsJson = Value(tagsJson),
+        difficulty = Value(difficulty),
+        sortOrder = Value(sortOrder);
+  static Insertable<LocalHistoricalMatch> custom({
+    Expression<String>? id,
+    Expression<String>? whitePlayer,
+    Expression<String>? blackPlayer,
+    Expression<String>? event,
+    Expression<int>? year,
+    Expression<String>? result,
+    Expression<String>? pgn,
+    Expression<String>? description,
+    Expression<String>? tagsJson,
+    Expression<String>? difficulty,
+    Expression<int>? sortOrder,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (whitePlayer != null) 'white_player': whitePlayer,
+      if (blackPlayer != null) 'black_player': blackPlayer,
+      if (event != null) 'event': event,
+      if (year != null) 'year': year,
+      if (result != null) 'result': result,
+      if (pgn != null) 'pgn': pgn,
+      if (description != null) 'description': description,
+      if (tagsJson != null) 'tags_json': tagsJson,
+      if (difficulty != null) 'difficulty': difficulty,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HistoricalMatchesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? whitePlayer,
+      Value<String>? blackPlayer,
+      Value<String>? event,
+      Value<int>? year,
+      Value<String>? result,
+      Value<String>? pgn,
+      Value<String>? description,
+      Value<String>? tagsJson,
+      Value<String>? difficulty,
+      Value<int>? sortOrder,
+      Value<int>? rowid}) {
+    return HistoricalMatchesCompanion(
+      id: id ?? this.id,
+      whitePlayer: whitePlayer ?? this.whitePlayer,
+      blackPlayer: blackPlayer ?? this.blackPlayer,
+      event: event ?? this.event,
+      year: year ?? this.year,
+      result: result ?? this.result,
+      pgn: pgn ?? this.pgn,
+      description: description ?? this.description,
+      tagsJson: tagsJson ?? this.tagsJson,
+      difficulty: difficulty ?? this.difficulty,
+      sortOrder: sortOrder ?? this.sortOrder,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (whitePlayer.present) {
+      map['white_player'] = Variable<String>(whitePlayer.value);
+    }
+    if (blackPlayer.present) {
+      map['black_player'] = Variable<String>(blackPlayer.value);
+    }
+    if (event.present) {
+      map['event'] = Variable<String>(event.value);
+    }
+    if (year.present) {
+      map['year'] = Variable<int>(year.value);
+    }
+    if (result.present) {
+      map['result'] = Variable<String>(result.value);
+    }
+    if (pgn.present) {
+      map['pgn'] = Variable<String>(pgn.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (tagsJson.present) {
+      map['tags_json'] = Variable<String>(tagsJson.value);
+    }
+    if (difficulty.present) {
+      map['difficulty'] = Variable<String>(difficulty.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HistoricalMatchesCompanion(')
+          ..write('id: $id, ')
+          ..write('whitePlayer: $whitePlayer, ')
+          ..write('blackPlayer: $blackPlayer, ')
+          ..write('event: $event, ')
+          ..write('year: $year, ')
+          ..write('result: $result, ')
+          ..write('pgn: $pgn, ')
+          ..write('description: $description, ')
+          ..write('tagsJson: $tagsJson, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $GamesTable games = $GamesTable(this);
   late final $MovesTable moves = $MovesTable(this);
   late final $ProfileTable profile = $ProfileTable(this);
+  late final $CacheMetaTable cacheMeta = $CacheMetaTable(this);
+  late final $TheoryEntriesTable theoryEntries = $TheoryEntriesTable(this);
+  late final $TheoryUserDataTable theoryUserData = $TheoryUserDataTable(this);
+  late final $HistoricalMatchesTable historicalMatches =
+      $HistoricalMatchesTable(this);
+  late final TheoryDao theoryDao = TheoryDao(this as AppDatabase);
+  late final HistoricalMatchesDao historicalMatchesDao =
+      HistoricalMatchesDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [games, moves, profile];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        games,
+        moves,
+        profile,
+        cacheMeta,
+        theoryEntries,
+        theoryUserData,
+        historicalMatches
+      ];
 }
 
 typedef $$GamesTableCreateCompanionBuilder = GamesCompanion Function({
@@ -1552,6 +3278,8 @@ typedef $$GamesTableCreateCompanionBuilder = GamesCompanion Function({
   Value<int> playerColorIndex,
   Value<String?> remoteId,
   Value<bool> pendingSync,
+  Value<String> fen,
+  Value<bool> isActive,
 });
 typedef $$GamesTableUpdateCompanionBuilder = GamesCompanion Function({
   Value<int> id,
@@ -1565,6 +3293,8 @@ typedef $$GamesTableUpdateCompanionBuilder = GamesCompanion Function({
   Value<int> playerColorIndex,
   Value<String?> remoteId,
   Value<bool> pendingSync,
+  Value<String> fen,
+  Value<bool> isActive,
 });
 
 final class $$GamesTableReferences
@@ -1629,6 +3359,12 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
 
   ColumnFilters<bool> get pendingSync => $composableBuilder(
       column: $table.pendingSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fen => $composableBuilder(
+      column: $table.fen, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
 
   Expression<bool> movesRefs(
       Expression<bool> Function($$MovesTableFilterComposer f) f) {
@@ -1696,6 +3432,12 @@ class $$GamesTableOrderingComposer
 
   ColumnOrderings<bool> get pendingSync => $composableBuilder(
       column: $table.pendingSync, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fen => $composableBuilder(
+      column: $table.fen, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
 }
 
 class $$GamesTableAnnotationComposer
@@ -1739,6 +3481,12 @@ class $$GamesTableAnnotationComposer
 
   GeneratedColumn<bool> get pendingSync => $composableBuilder(
       column: $table.pendingSync, builder: (column) => column);
+
+  GeneratedColumn<String> get fen =>
+      $composableBuilder(column: $table.fen, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
 
   Expression<T> movesRefs<T extends Object>(
       Expression<T> Function($$MovesTableAnnotationComposer a) f) {
@@ -1796,6 +3544,8 @@ class $$GamesTableTableManager extends RootTableManager<
             Value<int> playerColorIndex = const Value.absent(),
             Value<String?> remoteId = const Value.absent(),
             Value<bool> pendingSync = const Value.absent(),
+            Value<String> fen = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
           }) =>
               GamesCompanion(
             id: id,
@@ -1809,6 +3559,8 @@ class $$GamesTableTableManager extends RootTableManager<
             playerColorIndex: playerColorIndex,
             remoteId: remoteId,
             pendingSync: pendingSync,
+            fen: fen,
+            isActive: isActive,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -1822,6 +3574,8 @@ class $$GamesTableTableManager extends RootTableManager<
             Value<int> playerColorIndex = const Value.absent(),
             Value<String?> remoteId = const Value.absent(),
             Value<bool> pendingSync = const Value.absent(),
+            Value<String> fen = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
           }) =>
               GamesCompanion.insert(
             id: id,
@@ -1835,6 +3589,8 @@ class $$GamesTableTableManager extends RootTableManager<
             playerColorIndex: playerColorIndex,
             remoteId: remoteId,
             pendingSync: pendingSync,
+            fen: fen,
+            isActive: isActive,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
@@ -2438,6 +4194,841 @@ typedef $$ProfileTableProcessedTableManager = ProcessedTableManager<
     (ProfileData, BaseReferences<_$AppDatabase, $ProfileTable, ProfileData>),
     ProfileData,
     PrefetchHooks Function()>;
+typedef $$CacheMetaTableCreateCompanionBuilder = CacheMetaCompanion Function({
+  required String key,
+  required DateTime lastFetchedAt,
+  Value<int> recordCount,
+  Value<int> rowid,
+});
+typedef $$CacheMetaTableUpdateCompanionBuilder = CacheMetaCompanion Function({
+  Value<String> key,
+  Value<DateTime> lastFetchedAt,
+  Value<int> recordCount,
+  Value<int> rowid,
+});
+
+class $$CacheMetaTableFilterComposer
+    extends Composer<_$AppDatabase, $CacheMetaTable> {
+  $$CacheMetaTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastFetchedAt => $composableBuilder(
+      column: $table.lastFetchedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get recordCount => $composableBuilder(
+      column: $table.recordCount, builder: (column) => ColumnFilters(column));
+}
+
+class $$CacheMetaTableOrderingComposer
+    extends Composer<_$AppDatabase, $CacheMetaTable> {
+  $$CacheMetaTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastFetchedAt => $composableBuilder(
+      column: $table.lastFetchedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get recordCount => $composableBuilder(
+      column: $table.recordCount, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CacheMetaTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CacheMetaTable> {
+  $$CacheMetaTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastFetchedAt => $composableBuilder(
+      column: $table.lastFetchedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get recordCount => $composableBuilder(
+      column: $table.recordCount, builder: (column) => column);
+}
+
+class $$CacheMetaTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CacheMetaTable,
+    CacheMetaData,
+    $$CacheMetaTableFilterComposer,
+    $$CacheMetaTableOrderingComposer,
+    $$CacheMetaTableAnnotationComposer,
+    $$CacheMetaTableCreateCompanionBuilder,
+    $$CacheMetaTableUpdateCompanionBuilder,
+    (
+      CacheMetaData,
+      BaseReferences<_$AppDatabase, $CacheMetaTable, CacheMetaData>
+    ),
+    CacheMetaData,
+    PrefetchHooks Function()> {
+  $$CacheMetaTableTableManager(_$AppDatabase db, $CacheMetaTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CacheMetaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CacheMetaTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CacheMetaTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<DateTime> lastFetchedAt = const Value.absent(),
+            Value<int> recordCount = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CacheMetaCompanion(
+            key: key,
+            lastFetchedAt: lastFetchedAt,
+            recordCount: recordCount,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String key,
+            required DateTime lastFetchedAt,
+            Value<int> recordCount = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CacheMetaCompanion.insert(
+            key: key,
+            lastFetchedAt: lastFetchedAt,
+            recordCount: recordCount,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CacheMetaTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CacheMetaTable,
+    CacheMetaData,
+    $$CacheMetaTableFilterComposer,
+    $$CacheMetaTableOrderingComposer,
+    $$CacheMetaTableAnnotationComposer,
+    $$CacheMetaTableCreateCompanionBuilder,
+    $$CacheMetaTableUpdateCompanionBuilder,
+    (
+      CacheMetaData,
+      BaseReferences<_$AppDatabase, $CacheMetaTable, CacheMetaData>
+    ),
+    CacheMetaData,
+    PrefetchHooks Function()>;
+typedef $$TheoryEntriesTableCreateCompanionBuilder = TheoryEntriesCompanion
+    Function({
+  required String id,
+  required String phase,
+  required String title,
+  Value<String?> subtitle,
+  required String summary,
+  required String movesJson,
+  required String keyIdeasJson,
+  required String variationsJson,
+  required String difficulty,
+  required String tagsJson,
+  required int sortOrder,
+  Value<int> rowid,
+});
+typedef $$TheoryEntriesTableUpdateCompanionBuilder = TheoryEntriesCompanion
+    Function({
+  Value<String> id,
+  Value<String> phase,
+  Value<String> title,
+  Value<String?> subtitle,
+  Value<String> summary,
+  Value<String> movesJson,
+  Value<String> keyIdeasJson,
+  Value<String> variationsJson,
+  Value<String> difficulty,
+  Value<String> tagsJson,
+  Value<int> sortOrder,
+  Value<int> rowid,
+});
+
+class $$TheoryEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $TheoryEntriesTable> {
+  $$TheoryEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get phase => $composableBuilder(
+      column: $table.phase, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subtitle => $composableBuilder(
+      column: $table.subtitle, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get summary => $composableBuilder(
+      column: $table.summary, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get movesJson => $composableBuilder(
+      column: $table.movesJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get keyIdeasJson => $composableBuilder(
+      column: $table.keyIdeasJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get variationsJson => $composableBuilder(
+      column: $table.variationsJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get difficulty => $composableBuilder(
+      column: $table.difficulty, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tagsJson => $composableBuilder(
+      column: $table.tagsJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnFilters(column));
+}
+
+class $$TheoryEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TheoryEntriesTable> {
+  $$TheoryEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get phase => $composableBuilder(
+      column: $table.phase, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subtitle => $composableBuilder(
+      column: $table.subtitle, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get summary => $composableBuilder(
+      column: $table.summary, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get movesJson => $composableBuilder(
+      column: $table.movesJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get keyIdeasJson => $composableBuilder(
+      column: $table.keyIdeasJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get variationsJson => $composableBuilder(
+      column: $table.variationsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get difficulty => $composableBuilder(
+      column: $table.difficulty, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tagsJson => $composableBuilder(
+      column: $table.tagsJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnOrderings(column));
+}
+
+class $$TheoryEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TheoryEntriesTable> {
+  $$TheoryEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get phase =>
+      $composableBuilder(column: $table.phase, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get subtitle =>
+      $composableBuilder(column: $table.subtitle, builder: (column) => column);
+
+  GeneratedColumn<String> get summary =>
+      $composableBuilder(column: $table.summary, builder: (column) => column);
+
+  GeneratedColumn<String> get movesJson =>
+      $composableBuilder(column: $table.movesJson, builder: (column) => column);
+
+  GeneratedColumn<String> get keyIdeasJson => $composableBuilder(
+      column: $table.keyIdeasJson, builder: (column) => column);
+
+  GeneratedColumn<String> get variationsJson => $composableBuilder(
+      column: $table.variationsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get difficulty => $composableBuilder(
+      column: $table.difficulty, builder: (column) => column);
+
+  GeneratedColumn<String> get tagsJson =>
+      $composableBuilder(column: $table.tagsJson, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+}
+
+class $$TheoryEntriesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TheoryEntriesTable,
+    LocalTheoryEntry,
+    $$TheoryEntriesTableFilterComposer,
+    $$TheoryEntriesTableOrderingComposer,
+    $$TheoryEntriesTableAnnotationComposer,
+    $$TheoryEntriesTableCreateCompanionBuilder,
+    $$TheoryEntriesTableUpdateCompanionBuilder,
+    (
+      LocalTheoryEntry,
+      BaseReferences<_$AppDatabase, $TheoryEntriesTable, LocalTheoryEntry>
+    ),
+    LocalTheoryEntry,
+    PrefetchHooks Function()> {
+  $$TheoryEntriesTableTableManager(_$AppDatabase db, $TheoryEntriesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TheoryEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TheoryEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TheoryEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> phase = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String?> subtitle = const Value.absent(),
+            Value<String> summary = const Value.absent(),
+            Value<String> movesJson = const Value.absent(),
+            Value<String> keyIdeasJson = const Value.absent(),
+            Value<String> variationsJson = const Value.absent(),
+            Value<String> difficulty = const Value.absent(),
+            Value<String> tagsJson = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TheoryEntriesCompanion(
+            id: id,
+            phase: phase,
+            title: title,
+            subtitle: subtitle,
+            summary: summary,
+            movesJson: movesJson,
+            keyIdeasJson: keyIdeasJson,
+            variationsJson: variationsJson,
+            difficulty: difficulty,
+            tagsJson: tagsJson,
+            sortOrder: sortOrder,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String phase,
+            required String title,
+            Value<String?> subtitle = const Value.absent(),
+            required String summary,
+            required String movesJson,
+            required String keyIdeasJson,
+            required String variationsJson,
+            required String difficulty,
+            required String tagsJson,
+            required int sortOrder,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TheoryEntriesCompanion.insert(
+            id: id,
+            phase: phase,
+            title: title,
+            subtitle: subtitle,
+            summary: summary,
+            movesJson: movesJson,
+            keyIdeasJson: keyIdeasJson,
+            variationsJson: variationsJson,
+            difficulty: difficulty,
+            tagsJson: tagsJson,
+            sortOrder: sortOrder,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$TheoryEntriesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $TheoryEntriesTable,
+    LocalTheoryEntry,
+    $$TheoryEntriesTableFilterComposer,
+    $$TheoryEntriesTableOrderingComposer,
+    $$TheoryEntriesTableAnnotationComposer,
+    $$TheoryEntriesTableCreateCompanionBuilder,
+    $$TheoryEntriesTableUpdateCompanionBuilder,
+    (
+      LocalTheoryEntry,
+      BaseReferences<_$AppDatabase, $TheoryEntriesTable, LocalTheoryEntry>
+    ),
+    LocalTheoryEntry,
+    PrefetchHooks Function()>;
+typedef $$TheoryUserDataTableCreateCompanionBuilder = TheoryUserDataCompanion
+    Function({
+  required String theoryId,
+  Value<bool> isBookmarked,
+  Value<bool> isCompleted,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$TheoryUserDataTableUpdateCompanionBuilder = TheoryUserDataCompanion
+    Function({
+  Value<String> theoryId,
+  Value<bool> isBookmarked,
+  Value<bool> isCompleted,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$TheoryUserDataTableFilterComposer
+    extends Composer<_$AppDatabase, $TheoryUserDataTable> {
+  $$TheoryUserDataTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get theoryId => $composableBuilder(
+      column: $table.theoryId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isBookmarked => $composableBuilder(
+      column: $table.isBookmarked, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$TheoryUserDataTableOrderingComposer
+    extends Composer<_$AppDatabase, $TheoryUserDataTable> {
+  $$TheoryUserDataTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get theoryId => $composableBuilder(
+      column: $table.theoryId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isBookmarked => $composableBuilder(
+      column: $table.isBookmarked,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$TheoryUserDataTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TheoryUserDataTable> {
+  $$TheoryUserDataTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get theoryId =>
+      $composableBuilder(column: $table.theoryId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isBookmarked => $composableBuilder(
+      column: $table.isBookmarked, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$TheoryUserDataTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TheoryUserDataTable,
+    LocalTheoryUserData,
+    $$TheoryUserDataTableFilterComposer,
+    $$TheoryUserDataTableOrderingComposer,
+    $$TheoryUserDataTableAnnotationComposer,
+    $$TheoryUserDataTableCreateCompanionBuilder,
+    $$TheoryUserDataTableUpdateCompanionBuilder,
+    (
+      LocalTheoryUserData,
+      BaseReferences<_$AppDatabase, $TheoryUserDataTable, LocalTheoryUserData>
+    ),
+    LocalTheoryUserData,
+    PrefetchHooks Function()> {
+  $$TheoryUserDataTableTableManager(
+      _$AppDatabase db, $TheoryUserDataTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TheoryUserDataTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TheoryUserDataTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TheoryUserDataTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> theoryId = const Value.absent(),
+            Value<bool> isBookmarked = const Value.absent(),
+            Value<bool> isCompleted = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TheoryUserDataCompanion(
+            theoryId: theoryId,
+            isBookmarked: isBookmarked,
+            isCompleted: isCompleted,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String theoryId,
+            Value<bool> isBookmarked = const Value.absent(),
+            Value<bool> isCompleted = const Value.absent(),
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TheoryUserDataCompanion.insert(
+            theoryId: theoryId,
+            isBookmarked: isBookmarked,
+            isCompleted: isCompleted,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$TheoryUserDataTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $TheoryUserDataTable,
+    LocalTheoryUserData,
+    $$TheoryUserDataTableFilterComposer,
+    $$TheoryUserDataTableOrderingComposer,
+    $$TheoryUserDataTableAnnotationComposer,
+    $$TheoryUserDataTableCreateCompanionBuilder,
+    $$TheoryUserDataTableUpdateCompanionBuilder,
+    (
+      LocalTheoryUserData,
+      BaseReferences<_$AppDatabase, $TheoryUserDataTable, LocalTheoryUserData>
+    ),
+    LocalTheoryUserData,
+    PrefetchHooks Function()>;
+typedef $$HistoricalMatchesTableCreateCompanionBuilder
+    = HistoricalMatchesCompanion Function({
+  required String id,
+  required String whitePlayer,
+  required String blackPlayer,
+  required String event,
+  required int year,
+  required String result,
+  required String pgn,
+  required String description,
+  required String tagsJson,
+  required String difficulty,
+  required int sortOrder,
+  Value<int> rowid,
+});
+typedef $$HistoricalMatchesTableUpdateCompanionBuilder
+    = HistoricalMatchesCompanion Function({
+  Value<String> id,
+  Value<String> whitePlayer,
+  Value<String> blackPlayer,
+  Value<String> event,
+  Value<int> year,
+  Value<String> result,
+  Value<String> pgn,
+  Value<String> description,
+  Value<String> tagsJson,
+  Value<String> difficulty,
+  Value<int> sortOrder,
+  Value<int> rowid,
+});
+
+class $$HistoricalMatchesTableFilterComposer
+    extends Composer<_$AppDatabase, $HistoricalMatchesTable> {
+  $$HistoricalMatchesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get whitePlayer => $composableBuilder(
+      column: $table.whitePlayer, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get blackPlayer => $composableBuilder(
+      column: $table.blackPlayer, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get event => $composableBuilder(
+      column: $table.event, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get year => $composableBuilder(
+      column: $table.year, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get result => $composableBuilder(
+      column: $table.result, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get pgn => $composableBuilder(
+      column: $table.pgn, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tagsJson => $composableBuilder(
+      column: $table.tagsJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get difficulty => $composableBuilder(
+      column: $table.difficulty, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnFilters(column));
+}
+
+class $$HistoricalMatchesTableOrderingComposer
+    extends Composer<_$AppDatabase, $HistoricalMatchesTable> {
+  $$HistoricalMatchesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get whitePlayer => $composableBuilder(
+      column: $table.whitePlayer, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get blackPlayer => $composableBuilder(
+      column: $table.blackPlayer, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get event => $composableBuilder(
+      column: $table.event, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get year => $composableBuilder(
+      column: $table.year, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get result => $composableBuilder(
+      column: $table.result, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get pgn => $composableBuilder(
+      column: $table.pgn, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tagsJson => $composableBuilder(
+      column: $table.tagsJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get difficulty => $composableBuilder(
+      column: $table.difficulty, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnOrderings(column));
+}
+
+class $$HistoricalMatchesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HistoricalMatchesTable> {
+  $$HistoricalMatchesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get whitePlayer => $composableBuilder(
+      column: $table.whitePlayer, builder: (column) => column);
+
+  GeneratedColumn<String> get blackPlayer => $composableBuilder(
+      column: $table.blackPlayer, builder: (column) => column);
+
+  GeneratedColumn<String> get event =>
+      $composableBuilder(column: $table.event, builder: (column) => column);
+
+  GeneratedColumn<int> get year =>
+      $composableBuilder(column: $table.year, builder: (column) => column);
+
+  GeneratedColumn<String> get result =>
+      $composableBuilder(column: $table.result, builder: (column) => column);
+
+  GeneratedColumn<String> get pgn =>
+      $composableBuilder(column: $table.pgn, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get tagsJson =>
+      $composableBuilder(column: $table.tagsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get difficulty => $composableBuilder(
+      column: $table.difficulty, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+}
+
+class $$HistoricalMatchesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $HistoricalMatchesTable,
+    LocalHistoricalMatch,
+    $$HistoricalMatchesTableFilterComposer,
+    $$HistoricalMatchesTableOrderingComposer,
+    $$HistoricalMatchesTableAnnotationComposer,
+    $$HistoricalMatchesTableCreateCompanionBuilder,
+    $$HistoricalMatchesTableUpdateCompanionBuilder,
+    (
+      LocalHistoricalMatch,
+      BaseReferences<_$AppDatabase, $HistoricalMatchesTable,
+          LocalHistoricalMatch>
+    ),
+    LocalHistoricalMatch,
+    PrefetchHooks Function()> {
+  $$HistoricalMatchesTableTableManager(
+      _$AppDatabase db, $HistoricalMatchesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HistoricalMatchesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HistoricalMatchesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HistoricalMatchesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> whitePlayer = const Value.absent(),
+            Value<String> blackPlayer = const Value.absent(),
+            Value<String> event = const Value.absent(),
+            Value<int> year = const Value.absent(),
+            Value<String> result = const Value.absent(),
+            Value<String> pgn = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> tagsJson = const Value.absent(),
+            Value<String> difficulty = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HistoricalMatchesCompanion(
+            id: id,
+            whitePlayer: whitePlayer,
+            blackPlayer: blackPlayer,
+            event: event,
+            year: year,
+            result: result,
+            pgn: pgn,
+            description: description,
+            tagsJson: tagsJson,
+            difficulty: difficulty,
+            sortOrder: sortOrder,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String whitePlayer,
+            required String blackPlayer,
+            required String event,
+            required int year,
+            required String result,
+            required String pgn,
+            required String description,
+            required String tagsJson,
+            required String difficulty,
+            required int sortOrder,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HistoricalMatchesCompanion.insert(
+            id: id,
+            whitePlayer: whitePlayer,
+            blackPlayer: blackPlayer,
+            event: event,
+            year: year,
+            result: result,
+            pgn: pgn,
+            description: description,
+            tagsJson: tagsJson,
+            difficulty: difficulty,
+            sortOrder: sortOrder,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$HistoricalMatchesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $HistoricalMatchesTable,
+    LocalHistoricalMatch,
+    $$HistoricalMatchesTableFilterComposer,
+    $$HistoricalMatchesTableOrderingComposer,
+    $$HistoricalMatchesTableAnnotationComposer,
+    $$HistoricalMatchesTableCreateCompanionBuilder,
+    $$HistoricalMatchesTableUpdateCompanionBuilder,
+    (
+      LocalHistoricalMatch,
+      BaseReferences<_$AppDatabase, $HistoricalMatchesTable,
+          LocalHistoricalMatch>
+    ),
+    LocalHistoricalMatch,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2448,4 +5039,12 @@ class $AppDatabaseManager {
       $$MovesTableTableManager(_db, _db.moves);
   $$ProfileTableTableManager get profile =>
       $$ProfileTableTableManager(_db, _db.profile);
+  $$CacheMetaTableTableManager get cacheMeta =>
+      $$CacheMetaTableTableManager(_db, _db.cacheMeta);
+  $$TheoryEntriesTableTableManager get theoryEntries =>
+      $$TheoryEntriesTableTableManager(_db, _db.theoryEntries);
+  $$TheoryUserDataTableTableManager get theoryUserData =>
+      $$TheoryUserDataTableTableManager(_db, _db.theoryUserData);
+  $$HistoricalMatchesTableTableManager get historicalMatches =>
+      $$HistoricalMatchesTableTableManager(_db, _db.historicalMatches);
 }

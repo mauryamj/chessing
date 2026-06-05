@@ -11,6 +11,7 @@ import 'widgets/material_diff_bar.dart';
 import 'widgets/legal_moves_overlay.dart';
 import '../../../app/theme.dart';
 import '../../settings/settings_provider.dart';
+import 'widgets/game_over_overlay.dart';
 
 class BoardScreen extends ConsumerWidget {
   final Map<String, dynamic>? config;
@@ -47,22 +48,7 @@ class BoardScreen extends ConsumerWidget {
     );
   }
 
-  String _getGameStatusText(GameStatus status, bool isPlayerWhite) {
-    switch (status) {
-      case GameStatus.checkmate:
-        return 'Game Over by Checkmate';
-      case GameStatus.stalemate:
-        return 'Game Drawn by Stalemate';
-      case GameStatus.draw:
-        return 'Game Drawn';
-      case GameStatus.resigned:
-        return 'Game Over by Resignation';
-      case GameStatus.timeout:
-        return 'Game Over by Timeout';
-      default:
-        return 'Game in Progress';
-    }
-  }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,9 +72,11 @@ class BoardScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Top Bar
+            Column(
+              children: [
+                // Top Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
@@ -422,68 +410,24 @@ class BoardScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-
-      // Overlay Modal for Game Over state
-      bottomSheet: boardState.status != GameStatus.playing
-          ? Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        boardState.status == GameStatus.resigned || boardState.status == GameStatus.timeout
-                            ? Icons.error_outline
-                            : Icons.emoji_events,
-                        color: theme.colorScheme.primary,
-                        size: 32,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _getGameStatusText(boardState.status, isPlayerWhite),
-                          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'The match has ended. You can review this match in your history or click below to return to the setup menu.',
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => context.pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: const Text('RETURN TO SETUP', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            )
-          : null,
-    );
+        if (boardState.isGameOver)
+          GameOverOverlay(
+            state: boardState,
+            onPlayAgain: () => notifier.playAgain(),
+            onChangeSettings: () => context.go('/setup'),
+            onReview: () {
+              if (boardState.savedLocalGameId != null) {
+                context.push('/review/${boardState.savedLocalGameId}');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Game review not ready yet.')),
+                );
+              }
+            },
+          ),
+      ],
+    ),
+  ),
+);
   }
 }

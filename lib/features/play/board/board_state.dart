@@ -29,7 +29,13 @@ class BoardState {
     required this.playerColorIndex,
     this.threatOverlayEnabled = false,
     this.threatSquares = const [],
+    this.savedLocalGameId,
   });
+
+  final int? savedLocalGameId;
+
+  bool get isGameOver => status != GameStatus.playing;
+  bool get wasDefeat => status == GameStatus.resigned || status == GameStatus.timeout;
 
   BoardState copyWith({
     String? fen,
@@ -44,6 +50,7 @@ class BoardState {
     int? playerColorIndex,
     bool? threatOverlayEnabled,
     List<int>? threatSquares,
+    int? savedLocalGameId,
   }) {
     return BoardState(
       fen: fen ?? this.fen,
@@ -58,6 +65,7 @@ class BoardState {
       playerColorIndex: playerColorIndex ?? this.playerColorIndex,
       threatOverlayEnabled: threatOverlayEnabled ?? this.threatOverlayEnabled,
       threatSquares: threatSquares ?? this.threatSquares,
+      savedLocalGameId: savedLocalGameId ?? this.savedLocalGameId,
     );
   }
 }

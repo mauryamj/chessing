@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../core/database/app_database.dart';
+import '../models/game_summary.dart';
 
 class MatchListTile extends StatelessWidget {
-  final Game game;
+  final GameSummary game;
   final VoidCallback onTap;
 
   const MatchListTile({super.key, required this.game, required this.onTap});
@@ -130,7 +130,7 @@ class MatchListTile extends StatelessWidget {
     );
   }
 
-  String _modeLabel(Game game) {
+  String _modeLabel(GameSummary game) {
     switch (game.mode) {
       case 'timed':
         final secs = game.timeControlSeconds ?? 0;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../core/database/app_database.dart';
+import '../models/game_summary.dart';
 
 class AccuracyChart extends StatefulWidget {
-  final List<Game> games;
+  final List<GameSummary> games;
 
   const AccuracyChart({super.key, required this.games});
 
