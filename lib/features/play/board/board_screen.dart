@@ -50,6 +50,38 @@ class BoardScreen extends ConsumerWidget {
 
 
 
+  void _handleBackAction(
+    BuildContext context,
+    WidgetRef ref,
+    BoardState boardState,
+    BoardNotifier notifier,
+  ) {
+    if (boardState.status == GameStatus.playing) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Resign and leave?'),
+          content: const Text('Leaving now will count as a resignation. Are you sure?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                notifier.resign();
+              },
+              child: const Text('Resign', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+    } else {
+      context.go('/setup');
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final configJson = config ?? {};
@@ -70,49 +102,28 @@ class BoardScreen extends ConsumerWidget {
     final playerDuration = isPlayerWhite ? boardState.whiteTime : boardState.blackTime;
     final botDuration = isPlayerWhite ? boardState.blackTime : boardState.whiteTime;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                // Top Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBackAction(context, ref, boardState, notifier);
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Column(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () {
-                      if (boardState.status == GameStatus.playing) {
-                        // Confirm resignation before leaving
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Resign Game?'),
-                            content: const Text('Leaving now will count as a resignation. Are you sure?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(ctx);
-                                  notifier.resign();
-                                  context.pop();
-                                },
-                                child: const Text('Resign & Exit', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                      } else {
-                        context.pop();
-                      }
-                    },
-                  ),
+                  // Top Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => _handleBackAction(context, ref, boardState, notifier),
+                    ),
                   Text(
                     gameConfig.mode == GameMode.timed
                         ? 'Timed Match (${gameConfig.timeControl.label})'
@@ -394,7 +405,7 @@ class BoardScreen extends ConsumerWidget {
                       button: true,
                       excludeSemantics: true,
                       child: ElevatedButton.icon(
-                        onPressed: () => context.pop(),
+                        onPressed: () => context.go('/setup'),
                         icon: const Icon(Icons.exit_to_app),
                         label: const Text('Back to Menu'),
                         style: ElevatedButton.styleFrom(
@@ -415,19 +426,11 @@ class BoardScreen extends ConsumerWidget {
             state: boardState,
             onPlayAgain: () => notifier.playAgain(),
             onChangeSettings: () => context.go('/setup'),
-            onReview: () {
-              if (boardState.savedLocalGameId != null) {
-                context.push('/review/${boardState.savedLocalGameId}');
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Game review not ready yet.')),
-                );
-              }
-            },
           ),
       ],
     ),
   ),
+),
 );
   }
 }

@@ -6,41 +6,66 @@ class GameOverOverlay extends StatelessWidget {
   final BoardState state;
   final VoidCallback onPlayAgain;
   final VoidCallback onChangeSettings;
-  final VoidCallback onReview;
 
   const GameOverOverlay({
     super.key,
     required this.state,
     required this.onPlayAgain,
     required this.onChangeSettings,
-    required this.onReview,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final isDefeat = state.wasDefeat;
 
     String resultTitle = '';
+    bool isVictory = false;
+    bool isDraw = false;
+    bool isResigned = false;
+
     switch (state.status) {
       case GameStatus.checkmate:
-        resultTitle = isDefeat ? 'Checkmate · Defeat' : 'Checkmate · Victory!';
+        final playerWon = !state.isPlayerTurn;
+        resultTitle = playerWon ? 'You Won' : 'You Lost';
+        isVictory = playerWon;
         break;
       case GameStatus.resigned:
-        resultTitle = isDefeat ? 'Resigned · Defeat' : 'Opponent Resigned · Victory!';
+        resultTitle = 'You Resigned';
+        isResigned = true;
         break;
       case GameStatus.stalemate:
-        resultTitle = 'Draw by Stalemate';
-        break;
       case GameStatus.draw:
-        resultTitle = 'Match Drawn';
+        resultTitle = 'Draw';
+        isDraw = true;
         break;
       case GameStatus.timeout:
-        resultTitle = isDefeat ? 'Timeout · Defeat' : 'Timeout · Victory!';
+        final isPlayerWhite = state.playerColorIndex == 0;
+        final playerRanOutOfTime = isPlayerWhite
+            ? state.whiteTime == Duration.zero
+            : state.blackTime == Duration.zero;
+        final playerWon = !playerRanOutOfTime;
+        resultTitle = playerWon ? 'You Won' : 'You Lost';
+        isVictory = playerWon;
         break;
       default:
         resultTitle = 'Game Over';
+    }
+
+    IconData outcomeIcon;
+    Color iconColor;
+    if (isVictory) {
+      outcomeIcon = Icons.emoji_events_rounded;
+      iconColor = Colors.amber;
+    } else if (isDraw) {
+      outcomeIcon = Icons.balance_rounded;
+      iconColor = Colors.grey;
+    } else if (isResigned) {
+      outcomeIcon = Icons.flag_rounded;
+      iconColor = Colors.redAccent;
+    } else {
+      outcomeIcon = Icons.sentiment_dissatisfied_rounded;
+      iconColor = Colors.redAccent;
     }
 
     return ClipRect(
@@ -60,18 +85,18 @@ class GameOverOverlay extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Outcome Icon with animation / premium style
+                    // Outcome Icon
                     Center(
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: (isDefeat ? Colors.red : Colors.amber).withValues(alpha: 0.15),
+                          color: iconColor.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          isDefeat ? Icons.sentiment_dissatisfied : Icons.emoji_events_rounded,
+                          outcomeIcon,
                           size: 64,
-                          color: isDefeat ? Colors.redAccent : Colors.amber,
+                          color: iconColor,
                         ),
                       ),
                     ),
@@ -81,20 +106,9 @@ class GameOverOverlay extends StatelessWidget {
                     Text(
                       resultTitle,
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineSmall?.copyWith(
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Additional subtitle info
-                    Text(
-                      'The match has concluded. Review the analysis to see mistakes and learn key ideas.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.hintColor,
-                        height: 1.3,
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -104,11 +118,11 @@ class GameOverOverlay extends StatelessWidget {
                       onPressed: onPlayAgain,
                       icon: const Icon(Icons.refresh_rounded, color: Colors.white),
                       label: const Text(
-                        'PLAY AGAIN',
+                        'New Game',
                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDefeat ? Colors.redAccent : Colors.green,
+                        backgroundColor: cs.primary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 2,
@@ -116,32 +130,18 @@ class GameOverOverlay extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
 
-                    // Review Game button
+                    // Return to Play Menu button
                     OutlinedButton.icon(
-                      onPressed: onReview,
-                      icon: Icon(Icons.analytics_rounded, color: cs.primary),
+                      onPressed: onChangeSettings,
+                      icon: Icon(Icons.exit_to_app_rounded, color: cs.primary),
                       label: Text(
-                        'REVIEW ANALYSIS',
+                        'Return to Play Menu',
                         style: TextStyle(fontWeight: FontWeight.bold, color: cs.primary, letterSpacing: 0.5),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         side: BorderSide(color: cs.primary, width: 1.5),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Back to Menu button
-                    TextButton.icon(
-                      onPressed: onChangeSettings,
-                      icon: Icon(Icons.tune_rounded, color: theme.hintColor),
-                      label: Text(
-                        'Change Level / Mode',
-                        style: TextStyle(color: theme.hintColor, fontWeight: FontWeight.w600),
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ],

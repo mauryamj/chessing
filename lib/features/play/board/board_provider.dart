@@ -23,10 +23,11 @@ import '../../history/history_provider.dart';
 class BoardNotifier extends StateNotifier<BoardState> {
   final GameConfig config;
   final Ref ref;
-  late final bishop.Game _game;
+  late bishop.Game _game;
   Timer? _clockTimer;
   bool _isBotThinking = false;
-  late final int _playerColorIndex; // 0 for White, 1 for Black
+  late int _playerColorIndex; // 0 for White, 1 for Black
+  int _gameSessionId = 0;
 
   BoardNotifier({required this.config, required this.ref})
       : super(BoardState(
@@ -52,6 +53,8 @@ class BoardNotifier extends StateNotifier<BoardState> {
 
   void _initializeGame() {
     _clockTimer?.cancel();
+    _gameSessionId++;
+    _isBotThinking = false;
     _game = bishop.Game(variant: bishop.Variant.standard());
 
     // Determine player color
@@ -79,6 +82,9 @@ class BoardNotifier extends StateNotifier<BoardState> {
       squaresState: _game.squaresState(_playerColorIndex),
       playerColorIndex: _playerColorIndex,
       threatSquares: _calculateThreatSquares(),
+      threatOverlayEnabled: false,
+      lastMove: null,
+      savedLocalGameId: null,
     );
 
     if (config.mode == GameMode.timed) {
@@ -124,6 +130,10 @@ class BoardNotifier extends StateNotifier<BoardState> {
 
   void _handleTimeout(int losingColor) {
     _clockTimer?.cancel();
+    if (_isBotThinking) {
+      ref.read(stockfishServiceProvider).stopAnalysis();
+      _isBotThinking = false;
+    }
     state = state.copyWith(
       status: GameStatus.timeout,
       whiteTime: losingColor == 0 ? Duration.zero : state.whiteTime,
@@ -185,6 +195,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
   }
 
   Future<void> _triggerBotMove() async {
+    final sessionId = _gameSessionId;
     _isBotThinking = true;
     try {
       final service = ref.read(stockfishServiceProvider);
@@ -193,7 +204,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
         level: config.botLevel,
       );
 
-      if (botMoveUci.isEmpty || state.status != GameStatus.playing) {
+      if (sessionId != _gameSessionId || botMoveUci.isEmpty || state.status != GameStatus.playing) {
         return;
       }
 
@@ -237,7 +248,9 @@ class BoardNotifier extends StateNotifier<BoardState> {
     } catch (e) {
       debugPrint('Error during bot move execution: $e');
     } finally {
-      _isBotThinking = false;
+      if (sessionId == _gameSessionId) {
+        _isBotThinking = false;
+      }
     }
   }
 
@@ -256,6 +269,10 @@ class BoardNotifier extends StateNotifier<BoardState> {
   void resign() {
     if (state.status != GameStatus.playing) return;
     _clockTimer?.cancel();
+    if (_isBotThinking) {
+      ref.read(stockfishServiceProvider).stopAnalysis();
+      _isBotThinking = false;
+    }
     state = state.copyWith(status: GameStatus.resigned);
     _saveGameToDatabase();
   }
@@ -463,6 +480,6 @@ class BoardNotifier extends StateNotifier<BoardState> {
 
 // Family provider to instantiate BoardNotifier with dynamic config
 final boardStateProvider =
-    StateNotifierProvider.family<BoardNotifier, BoardState, GameConfig>((ref, config) {
+    StateNotifierProvider.autoDispose.family<BoardNotifier, BoardState, GameConfig>((ref, config) {
   return BoardNotifier(config: config, ref: ref);
 });
