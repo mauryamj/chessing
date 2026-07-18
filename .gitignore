@@ -43,3 +43,35 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment & Secrets
+.env
+.env.*
+*.env
+secrets.dart
+secrets.yaml
+
+# Firebase & Google Services
+google-services.json
+GoogleService-Info.plist
+lib/firebase_options.dart
+firebase_app_id_file.json
+**/firebase_options.dart
+
+# Android keystore & signing
+*.keystore
+*.jks
+key.properties
+**/key.properties
+android/app/*.keystore
+android/app/*.jks
+
+# iOS signing & certificates
+*.p12
+*.mobileprovision
+*.cer
+
+# Service account keys & credentials
+service-account*.json
+*-credentials.json
+credentials.json
