@@ -1,15 +1,63 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/settings/settings_provider.dart';
 import 'prompts.dart';
 
 final coachingServiceProvider = Provider<CoachingService>((ref) {
-  return CoachingService();
+  final customKey = ref.watch(settingsProvider).value?.geminiApiKey;
+  return CoachingService(customApiKey: customKey);
 });
 
 class CoachingService {
   final Dio _dio = Dio();
-  static const String apiKey = String.fromEnvironment('GEMINI_API_KEY');
+  final String? _customApiKey;
+
+  CoachingService({String? customApiKey}) : _customApiKey = customApiKey;
+
+  String get effectiveApiKey {
+    final custom = _customApiKey;
+    if (custom != null && custom.trim().isNotEmpty) {
+      return custom.trim();
+    }
+    final envKey = dotenv.env['GEMINI_API_KEY'];
+    if (envKey != null && envKey.trim().isNotEmpty) {
+      return envKey.trim();
+    }
+    return const String.fromEnvironment('GEMINI_API_KEY');
+  }
+
+  /// Tests a Gemini API key by making a minimal generateContent request.
+  static Future<bool> testApiKey(String key) async {
+    final trimmed = key.trim();
+    if (trimmed.isEmpty) return false;
+    try {
+      final dio = Dio();
+      final response = await dio.post(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$trimmed',
+        data: {
+          'contents': [
+            {
+              'parts': [
+                {'text': 'ping'}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'maxOutputTokens': 5,
+          }
+        },
+        options: Options(
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
 
   /// Returns true when any network interface is available.
   Future<bool> _isOnline() async {
@@ -18,8 +66,9 @@ class CoachingService {
   }
 
   Future<String> ask(String systemPrompt, String userMessage) async {
+    final apiKey = effectiveApiKey;
     if (apiKey.isEmpty) {
-      return "Coaching unavailable: Gemini API key is missing. Please run with --dart-define=GEMINI_API_KEY=your_key";
+      return "Coaching unavailable: Gemini API key is missing. Please add your Gemini API key in Settings.";
     }
 
     // Graceful offline degradation (5.3)
@@ -75,6 +124,10 @@ class CoachingService {
         return "Coaching unavailable: API returned status ${response.statusCode}";
       }
     } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
+        return "Coaching unavailable: Invalid Gemini API key. Please check your key in Settings.";
+      }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.sendTimeout ||
           e.type == DioExceptionType.receiveTimeout) {

@@ -5,6 +5,7 @@ import 'settings_provider.dart';
 import 'sections/account_section.dart';
 import 'sections/appearance_section.dart';
 import 'sections/gameplay_section.dart';
+import 'sections/ai_coaching_section.dart';
 import 'sections/notifications_section.dart';
 import 'sections/about_section.dart';
 
@@ -113,6 +114,11 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 20),
+
+                    // AI & Coaching
+                    const _SectionHeader(label: 'AI & Coaching'),
+                    const _SettingsCard(children: [AiCoachingSection()]),
                     const SizedBox(height: 20),
 
                     // Notifications

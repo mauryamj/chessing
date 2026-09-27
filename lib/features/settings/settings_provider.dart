@@ -63,6 +63,7 @@ class AppSettings {
   final int dailyReminderHour;
   final int dailyReminderMinute;
   final bool achievementNotifications;
+  final String geminiApiKey;
 
   const AppSettings({
     this.themeMode = ThemeMode.system,
@@ -79,7 +80,10 @@ class AppSettings {
     this.dailyReminderHour = 20,
     this.dailyReminderMinute = 0,
     this.achievementNotifications = true,
+    this.geminiApiKey = '',
   });
+
+  bool get hasCustomGeminiApiKey => geminiApiKey.trim().isNotEmpty;
 
   TimeOfDay get dailyReminderTime => TimeOfDay(
         hour: dailyReminderHour,
@@ -101,6 +105,7 @@ class AppSettings {
     int? dailyReminderHour,
     int? dailyReminderMinute,
     bool? achievementNotifications,
+    String? geminiApiKey,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -117,6 +122,7 @@ class AppSettings {
       dailyReminderHour: dailyReminderHour ?? this.dailyReminderHour,
       dailyReminderMinute: dailyReminderMinute ?? this.dailyReminderMinute,
       achievementNotifications: achievementNotifications ?? this.achievementNotifications,
+      geminiApiKey: geminiApiKey ?? this.geminiApiKey,
     );
   }
 }
@@ -135,6 +141,7 @@ const _kDailyReminderEnabled = 'settings_daily_reminder_enabled';
 const _kDailyReminderHour = 'settings_daily_reminder_hour';
 const _kDailyReminderMinute = 'settings_daily_reminder_minute';
 const _kAchievementNotifications = 'settings_achievement_notifications';
+const _kGeminiApiKey = 'settings_gemini_api_key';
 
 class SettingsNotifier extends AsyncNotifier<AppSettings> {
   late SharedPreferences _prefs;
@@ -160,6 +167,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     final dailyHour = _prefs.getInt(_kDailyReminderHour) ?? 20;
     final dailyMin = _prefs.getInt(_kDailyReminderMinute) ?? 0;
     final achievements = _prefs.getBool(_kAchievementNotifications) ?? true;
+    final geminiKey = _prefs.getString(_kGeminiApiKey) ?? '';
 
     return AppSettings(
       themeMode: ThemeMode.values[themeModeIndex],
@@ -176,6 +184,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       dailyReminderHour: dailyHour,
       dailyReminderMinute: dailyMin,
       achievementNotifications: achievements,
+      geminiApiKey: geminiKey,
     );
   }
 
@@ -264,6 +273,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _prefs.setBool(_kAchievementNotifications, enabled);
     state = state.whenData((s) => s.copyWith(achievementNotifications: enabled));
   }
+
+  Future<void> setGeminiApiKey(String key) async {
+    final trimmed = key.trim();
+    await _prefs.setString(_kGeminiApiKey, trimmed);
+    state = state.whenData((s) => s.copyWith(geminiApiKey: trimmed));
+  }
 }
 
 final settingsProvider = AsyncNotifierProvider<SettingsNotifier, AppSettings>(
@@ -276,4 +291,8 @@ final themeModeProvider = Provider<ThemeMode>((ref) {
 
 final boardThemeTypeProvider = Provider<BoardThemeType>((ref) {
   return ref.watch(settingsProvider).value?.boardTheme ?? BoardThemeType.classic;
+});
+
+final geminiApiKeyProvider = Provider<String>((ref) {
+  return ref.watch(settingsProvider).value?.geminiApiKey ?? '';
 });
