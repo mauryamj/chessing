@@ -64,11 +64,35 @@ class AppDatabase extends _$AppDatabase {
         ..limit(limit))
       .get();
 
+  Future<int> updateGameAccuracy(int gameId, int accuracy) =>
+      (update(games)..where((t) => t.id.equals(gameId))).write(
+        GamesCompanion(
+          playerAccuracy: Value(accuracy),
+        ),
+      );
+
   // --- MOVES METHODS ---
   Future<int> insertMove(MovesCompanion move) => into(moves).insert(move);
   
   Future<List<Move>> getMovesForGame(int gameId) =>
       (select(moves)..where((t) => t.gameId.equals(gameId))).get();
+
+  Future<int> updateMoveAnalysis({
+    required int gameId,
+    required int ply,
+    int? evalCentipawns,
+    String? classification,
+    String? bestMoveUci,
+  }) =>
+      (update(moves)
+            ..where((t) => t.gameId.equals(gameId) & t.ply.equals(ply)))
+          .write(
+        MovesCompanion(
+          evalCentipawns: Value(evalCentipawns),
+          classification: Value(classification),
+          bestMoveUci: Value(bestMoveUci),
+        ),
+      );
 
   // --- PROFILE METHODS ---
   Future<ProfileData?> getProfile() => select(profile).getSingleOrNull();

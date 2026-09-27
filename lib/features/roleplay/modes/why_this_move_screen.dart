@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:squares/squares.dart' as sq;
 import 'package:bishop/bishop.dart' as bishop;
 import 'package:square_bishop/square_bishop.dart';
-import '../../../core/ai/coaching_service.dart';
 import '../../../core/database/app_database.dart';
-import '../../../app/theme.dart';
+import '../../../core/utils/chess_move_utils.dart';
+import '../../../shared/widgets/board_theme_builder.dart';
+import 'why_this_move_provider.dart';
 
 class WhyThisMoveScreen extends ConsumerStatefulWidget {
   const WhyThisMoveScreen({super.key});
@@ -15,156 +16,40 @@ class WhyThisMoveScreen extends ConsumerStatefulWidget {
 }
 
 class _WhyThisMoveScreenState extends ConsumerState<WhyThisMoveScreen> {
-  late bishop.Game _game;
-  String _fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-  final TextEditingController _fenController = TextEditingController();
-  
-  List<Game> _recentGames = [];
-  Game? _selectedRecentGame;
-  List<Move> _selectedGameMoves = [];
-  int _selectedMovePly = 0;
-
-  String? _selectedMoveUci;
-  String? _explanation;
-  bool _isLoading = false;
+  late final TextEditingController _fenController;
 
   @override
   void initState() {
     super.initState();
-    _game = bishop.Game(variant: bishop.Variant.standard(), fen: _fen);
-    _fenController.text = _fen;
-    _loadRecentGames();
+    _fenController = TextEditingController(text: ref.read(whyThisMoveProvider).fen);
   }
 
-  Future<void> _loadRecentGames() async {
-    final db = ref.read(databaseProvider);
-    final games = await db.getRecentGames(5);
-    setState(() {
-      _recentGames = games;
-    });
-  }
-
-  Future<void> _onGameSelected(Game? game) async {
-    if (game == null) return;
-    final db = ref.read(databaseProvider);
-    final moves = await db.getMovesForGame(game.id);
-    
-    // Sort moves by ply
-    final sortedMoves = [...moves]..sort((a, b) => a.ply.compareTo(b.ply));
-
-    setState(() {
-      _selectedRecentGame = game;
-      _selectedGameMoves = sortedMoves;
-      _selectedMovePly = 0;
-      if (sortedMoves.isNotEmpty) {
-        _loadPlyPosition(0);
-      }
-    });
-  }
-
-  void _loadPlyPosition(int plyIndex) {
-    if (_selectedGameMoves.isEmpty || plyIndex < 0 || plyIndex >= _selectedGameMoves.length) return;
-    
-    // Play moves up to this ply
-    final bp = bishop.Game(variant: bishop.Variant.standard());
-    for (int i = 0; i < plyIndex; i++) {
-      final sqMove = bp.squaresSize.moveFromAlgebraic(_selectedGameMoves[i].uci);
-      bp.makeSquaresMove(sqMove);
-    }
-    
-    final currentUci = _selectedGameMoves[plyIndex].uci;
-    
-    setState(() {
-      _fen = bp.fen;
-      _fenController.text = bp.fen;
-      _game = bp;
-      _selectedMoveUci = currentUci;
-      _selectedMovePly = plyIndex;
-      _explanation = null;
-    });
-  }
-
-  void _updateFen(String newFen) {
-    try {
-      final bp = bishop.Game(variant: bishop.Variant.standard(), fen: newFen);
-      setState(() {
-        _fen = newFen;
-        _game = bp;
-        _selectedMoveUci = null;
-        _explanation = null;
-        _selectedRecentGame = null;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid FEN position: $e')),
-      );
-    }
-  }
-
-  void _onMoveSelected(bishop.Move m) {
-    final fromStr = _game.size.squareName(m.from);
-    final toStr = _game.size.squareName(m.to);
-    String promoStr = '';
-    if (m.promotion && m.promoPiece != null) {
-      switch (m.promoPiece) {
-        case 2: promoStr = 'n'; break;
-        case 3: promoStr = 'b'; break;
-        case 4: promoStr = 'r'; break;
-        case 5: promoStr = 'q'; break;
-      }
-    }
-    final uci = '$fromStr$toStr$promoStr';
-    setState(() {
-      _selectedMoveUci = uci;
-      _explanation = null;
-    });
-  }
-
-  Future<void> _askMagnus() async {
-    if (_selectedMoveUci == null) return;
-    setState(() {
-      _isLoading = true;
-      _explanation = null;
-    });
-
-    try {
-      final coach = ref.read(coachingServiceProvider);
-      final response = await coach.explainMove(_fen, _selectedMoveUci!);
-      setState(() {
-        _explanation = response;
-      });
-    } catch (e) {
-      setState(() {
-        _explanation = "Magnus Carlsen: Sorry, I couldn't explain that move right now. (Make sure your Gemini API key is configured).";
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  sq.BoardTheme _getBoardTheme(BuildContext context) {
-    final ext = Theme.of(context).extension<ChessBoardTheme>();
-    if (ext == null) return sq.BoardTheme.brown;
-    return sq.BoardTheme(
-      lightSquare: ext.lightSquareColor,
-      darkSquare: ext.darkSquareColor,
-      check: ext.checkSquareColor,
-      checkmate: Colors.orange,
-      previous: ext.lastMoveDestColor,
-      selected: ext.selectedSquareColor,
-      premove: const Color(0x807B56B3),
-    );
+  @override
+  void dispose() {
+    _fenController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final squaresState = _game.squaresState(0); // White at bottom
-    
-    // Get list of legal moves in the position
-    final legalMoves = _game.generateLegalMoves();
+
+    ref.listen<WhyThisMoveState>(whyThisMoveProvider, (previous, next) {
+      if (previous?.fen != next.fen) {
+        _fenController.text = next.fen;
+      }
+      if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.errorMessage!)),
+        );
+        ref.read(whyThisMoveProvider.notifier).clearError();
+      }
+    });
+
+    final state = ref.watch(whyThisMoveProvider);
+    final notifier = ref.read(whyThisMoveProvider.notifier);
+    final squaresState = state.game.squaresState(0); // White at bottom
+    final legalMoves = state.game.generateLegalMoves();
 
     return Scaffold(
       appBar: AppBar(
@@ -205,51 +90,51 @@ class _WhyThisMoveScreenState extends ConsumerState<WhyThisMoveScreen> {
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton(
-                            onPressed: () => _updateFen(_fenController.text),
+                            onPressed: () => notifier.updateFen(_fenController.text),
                             child: const Text('Load'),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       // Recent games loader
-                      if (_recentGames.isNotEmpty) ...[
+                      if (state.recentGames.isNotEmpty) ...[
                         DropdownButtonFormField<Game>(
                           decoration: const InputDecoration(
                             labelText: 'Load position from recent games',
                             border: OutlineInputBorder(),
                             isDense: true,
                           ),
-                          initialValue: _selectedRecentGame,
-                          items: _recentGames.map((g) {
+                          initialValue: state.selectedRecentGame,
+                          items: state.recentGames.map((g) {
                             final dateStr = "${g.playedAt.day}/${g.playedAt.month}";
                             return DropdownMenuItem<Game>(
                               value: g,
                               child: Text('${g.mode.toUpperCase()} game - result: ${g.result} ($dateStr)'),
                             );
                           }).toList(),
-                          onChanged: _onGameSelected,
+                          onChanged: notifier.onGameSelected,
                         ),
-                        if (_selectedRecentGame != null && _selectedGameMoves.isNotEmpty) ...[
+                        if (state.selectedRecentGame != null && state.selectedGameMoves.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Row(
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.arrow_back),
-                                onPressed: _selectedMovePly > 0
-                                    ? () => _loadPlyPosition(_selectedMovePly - 1)
+                                onPressed: state.selectedMovePly > 0
+                                    ? () => notifier.loadPlyPosition(state.selectedMovePly - 1)
                                     : null,
                               ),
                               Expanded(
                                 child: Text(
-                                  'Move ${_selectedMovePly + 1} / ${_selectedGameMoves.length}: ${_selectedGameMoves[_selectedMovePly].san}',
+                                  'Move ${state.selectedMovePly + 1} / ${state.selectedGameMoves.length}: ${state.selectedGameMoves[state.selectedMovePly].san}',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.arrow_forward),
-                                onPressed: _selectedMovePly < _selectedGameMoves.length - 1
-                                    ? () => _loadPlyPosition(_selectedMovePly + 1)
+                                onPressed: state.selectedMovePly < state.selectedGameMoves.length - 1
+                                    ? () => notifier.loadPlyPosition(state.selectedMovePly + 1)
                                     : null,
                               ),
                             ],
@@ -281,7 +166,7 @@ class _WhyThisMoveScreenState extends ConsumerState<WhyThisMoveScreen> {
                       child: sq.Board(
                         state: squaresState.board,
                         pieceSet: sq.PieceSet.merida(),
-                        theme: _getBoardTheme(context),
+                        theme: BoardThemeBuilder.build(context, ref),
                         size: squaresState.size,
                         draggable: false,
                       ),
@@ -310,21 +195,9 @@ class _WhyThisMoveScreenState extends ConsumerState<WhyThisMoveScreen> {
                     itemCount: legalMoves.length,
                     itemBuilder: (context, index) {
                       final m = legalMoves[index];
-                      final san = _game.toSan(m);
-                      
-                      final fromStr = _game.size.squareName(m.from);
-                      final toStr = _game.size.squareName(m.to);
-                      String promoStr = '';
-                      if (m.promotion && m.promoPiece != null) {
-                        switch (m.promoPiece) {
-                          case 2: promoStr = 'n'; break;
-                          case 3: promoStr = 'b'; break;
-                          case 4: promoStr = 'r'; break;
-                          case 5: promoStr = 'q'; break;
-                        }
-                      }
-                      final uci = '$fromStr$toStr$promoStr';
-                      final isSelected = _selectedMoveUci == uci;
+                      final san = state.game.toSan(m);
+                      final uci = ChessMoveUtils.toUci(state.game, m);
+                      final isSelected = state.selectedMoveUci == uci;
 
                       return Padding(
                         padding: const EdgeInsets.only(right: 8.0),
@@ -332,7 +205,7 @@ class _WhyThisMoveScreenState extends ConsumerState<WhyThisMoveScreen> {
                           label: Text(san),
                           selected: isSelected,
                           selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                          onSelected: (_) => _onMoveSelected(m),
+                          onSelected: (_) => notifier.selectMove(m),
                         ),
                       );
                     },
@@ -343,7 +216,9 @@ class _WhyThisMoveScreenState extends ConsumerState<WhyThisMoveScreen> {
 
               // Explain Button
               ElevatedButton.icon(
-                onPressed: _selectedMoveUci != null && !_isLoading ? _askMagnus : null,
+                onPressed: state.selectedMoveUci != null && !state.isLoading
+                    ? notifier.askMagnus
+                    : null,
                 icon: const Icon(Icons.psychology, color: Colors.white),
                 label: const Text('ASK MAGNUS CARLSEN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                 style: ElevatedButton.styleFrom(
@@ -356,14 +231,14 @@ class _WhyThisMoveScreenState extends ConsumerState<WhyThisMoveScreen> {
               const SizedBox(height: 16),
 
               // Explanation Chat Bubble
-              if (_isLoading)
+              if (state.isLoading)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24.0),
                     child: CircularProgressIndicator(),
                   ),
                 )
-              else if (_explanation != null)
+              else if (state.explanation != null)
                 Card(
                   color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
                   shape: RoundedRectangleBorder(
@@ -390,7 +265,7 @@ class _WhyThisMoveScreenState extends ConsumerState<WhyThisMoveScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _explanation!,
+                          state.explanation!,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontStyle: FontStyle.italic,
                             height: 1.4,

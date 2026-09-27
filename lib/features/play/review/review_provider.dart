@@ -275,9 +275,12 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
           squaresState: m.squaresState,
         );
 
-        await database.customStatement(
-          'UPDATE moves SET eval_centipawns = ?, classification = ?, best_move_uci = ? WHERE game_id = ? AND ply = ?',
-          [whiteEvalAfter, classification, bestMoveUci, gameId, m.ply],
+        await database.updateMoveAnalysis(
+          gameId: gameId,
+          ply: m.ply,
+          evalCentipawns: whiteEvalAfter,
+          classification: classification,
+          bestMoveUci: bestMoveUci,
         );
 
         if (turn == state.game.playerColorIndex) {
@@ -291,10 +294,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
         accuracy = max(0, 100 - (totalLoss ~/ (playerMovesCount * 2)));
       }
 
-      await database.customStatement(
-        'UPDATE games SET player_accuracy = ? WHERE id = ?',
-        [accuracy, gameId],
-      );
+      await database.updateGameAccuracy(gameId, accuracy);
 
       final updatedGame = await database.getGameById(gameId);
 

@@ -181,63 +181,66 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
 
   Future<void> setThemeMode(ThemeMode mode) async {
     await _prefs.setInt(_kThemeMode, mode.index);
-    state = AsyncData(state.value!.copyWith(themeMode: mode));
+    state = state.whenData((s) => s.copyWith(themeMode: mode));
   }
 
   Future<void> setBoardTheme(BoardThemeType theme) async {
     await _prefs.setInt(_kBoardTheme, theme.index);
-    state = AsyncData(state.value!.copyWith(boardTheme: theme));
+    state = state.whenData((s) => s.copyWith(boardTheme: theme));
   }
 
   Future<void> setPieceSet(PieceSetType pieceSet) async {
     await _prefs.setInt(_kPieceSet, pieceSet.index);
-    state = AsyncData(state.value!.copyWith(pieceSet: pieceSet));
+    state = state.whenData((s) => s.copyWith(pieceSet: pieceSet));
   }
 
   Future<void> setShowLegalMoves(bool value) async {
     await _prefs.setBool(_kShowLegalMoves, value);
-    state = AsyncData(state.value!.copyWith(showLegalMoves: value));
+    state = state.whenData((s) => s.copyWith(showLegalMoves: value));
   }
 
   Future<void> setShowThreatOverlay(bool value) async {
     await _prefs.setBool(_kShowThreatOverlay, value);
-    state = AsyncData(state.value!.copyWith(showThreatOverlay: value));
+    state = state.whenData((s) => s.copyWith(showThreatOverlay: value));
   }
 
   Future<void> setAutoQueenPromotion(bool value) async {
     await _prefs.setBool(_kAutoQueenPromotion, value);
-    state = AsyncData(state.value!.copyWith(autoQueenPromotion: value));
+    state = state.whenData((s) => s.copyWith(autoQueenPromotion: value));
   }
 
   Future<void> setMoveConfirmation(bool value) async {
     await _prefs.setBool(_kMoveConfirmation, value);
-    state = AsyncData(state.value!.copyWith(moveConfirmation: value));
+    state = state.whenData((s) => s.copyWith(moveConfirmation: value));
   }
 
   Future<void> setSound(bool enabled) async {
     await _prefs.setBool(_kSound, enabled);
-    state = AsyncData(state.value!.copyWith(soundEnabled: enabled));
+    state = state.whenData((s) => s.copyWith(soundEnabled: enabled));
   }
 
   Future<void> setHaptics(bool enabled) async {
     await _prefs.setBool(_kHaptics, enabled);
-    state = AsyncData(state.value!.copyWith(hapticsEnabled: enabled));
+    state = state.whenData((s) => s.copyWith(hapticsEnabled: enabled));
   }
 
   Future<void> setMoveSoundVolume(double volume) async {
     await _prefs.setDouble(_kMoveSoundVolume, volume);
-    state = AsyncData(state.value!.copyWith(moveSoundVolume: volume));
+    state = state.whenData((s) => s.copyWith(moveSoundVolume: volume));
   }
 
   Future<void> setDailyReminderEnabled(bool enabled) async {
     await _prefs.setBool(_kDailyReminderEnabled, enabled);
-    state = AsyncData(state.value!.copyWith(dailyReminderEnabled: enabled));
+    state = state.whenData((s) => s.copyWith(dailyReminderEnabled: enabled));
     
     try {
-      if (enabled) {
-        await FcmService().scheduleDailyReminder(state.value!.dailyReminderTime);
-      } else {
-        await FcmService().cancelDailyReminder();
+      final currentSettings = state.value;
+      if (currentSettings != null) {
+        if (enabled) {
+          await FcmService().scheduleDailyReminder(currentSettings.dailyReminderTime);
+        } else {
+          await FcmService().cancelDailyReminder();
+        }
       }
     } catch (_) {}
   }
@@ -245,13 +248,13 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   Future<void> setDailyReminderTime(TimeOfDay time) async {
     await _prefs.setInt(_kDailyReminderHour, time.hour);
     await _prefs.setInt(_kDailyReminderMinute, time.minute);
-    state = AsyncData(state.value!.copyWith(
+    state = state.whenData((s) => s.copyWith(
       dailyReminderHour: time.hour,
       dailyReminderMinute: time.minute,
     ));
     
     try {
-      if (state.value!.dailyReminderEnabled) {
+      if (state.value?.dailyReminderEnabled == true) {
         await FcmService().scheduleDailyReminder(time);
       }
     } catch (_) {}
@@ -259,7 +262,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
 
   Future<void> setAchievementNotifications(bool enabled) async {
     await _prefs.setBool(_kAchievementNotifications, enabled);
-    state = AsyncData(state.value!.copyWith(achievementNotifications: enabled));
+    state = state.whenData((s) => s.copyWith(achievementNotifications: enabled));
   }
 }
 

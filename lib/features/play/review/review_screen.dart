@@ -7,43 +7,12 @@ import 'widgets/eval_bar.dart';
 import 'widgets/move_timeline.dart';
 import 'widgets/blunder_map.dart';
 import 'widgets/best_move_card.dart';
-import '../../../app/theme.dart';
-import '../../settings/settings_provider.dart';
+import '../../../shared/widgets/board_theme_builder.dart';
 
 class ReviewScreen extends ConsumerWidget {
   final int gameId;
 
   const ReviewScreen({super.key, required this.gameId});
-
-  sq.BoardTheme _getBoardTheme(BuildContext context, WidgetRef ref) {
-    final boardThemeType = ref.watch(boardThemeTypeProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    ChessBoardTheme ext;
-    switch (boardThemeType) {
-      case BoardThemeType.wood:
-        ext = isDark ? ChessBoardTheme.woodDark : ChessBoardTheme.woodLight;
-        break;
-      case BoardThemeType.neon:
-        ext = isDark ? ChessBoardTheme.neonDark : ChessBoardTheme.neonLight;
-        break;
-      case BoardThemeType.minimal:
-        ext = isDark ? ChessBoardTheme.minimalDark : ChessBoardTheme.minimalLight;
-        break;
-      case BoardThemeType.classic:
-        ext = Theme.of(context).extension<ChessBoardTheme>() ??
-            (isDark ? ChessBoardTheme.classicDark : ChessBoardTheme.classicLight);
-        break;
-    }
-    return sq.BoardTheme(
-      lightSquare: ext.lightSquareColor,
-      darkSquare: ext.darkSquareColor,
-      check: ext.checkSquareColor,
-      checkmate: Colors.orange,
-      previous: ext.lastMoveDestColor,
-      selected: ext.selectedSquareColor,
-      premove: const Color(0x807B56B3),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -170,7 +139,7 @@ class ReviewScreen extends ConsumerWidget {
                                         sq.Board(
                                           state: reviewState.currentSquaresState.board,
                                           pieceSet: sq.PieceSet.merida(),
-                                          theme: _getBoardTheme(context, ref),
+                                          theme: BoardThemeBuilder.build(context, ref),
                                           size: reviewState.currentSquaresState.size,
                                           draggable: false,
                                           overlays: [

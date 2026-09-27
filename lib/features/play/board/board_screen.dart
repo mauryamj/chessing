@@ -9,44 +9,13 @@ import 'widgets/clock_widget.dart';
 import 'widgets/captured_pieces_bar.dart';
 import 'widgets/material_diff_bar.dart';
 import 'widgets/legal_moves_overlay.dart';
-import '../../../app/theme.dart';
-import '../../settings/settings_provider.dart';
 import 'widgets/game_over_overlay.dart';
+import '../../../shared/widgets/board_theme_builder.dart';
 
 class BoardScreen extends ConsumerWidget {
   final Map<String, dynamic>? config;
 
   const BoardScreen({super.key, this.config});
-
-  sq.BoardTheme _getBoardTheme(BuildContext context, WidgetRef ref) {
-    final boardThemeType = ref.watch(boardThemeTypeProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    ChessBoardTheme ext;
-    switch (boardThemeType) {
-      case BoardThemeType.wood:
-        ext = isDark ? ChessBoardTheme.woodDark : ChessBoardTheme.woodLight;
-        break;
-      case BoardThemeType.neon:
-        ext = isDark ? ChessBoardTheme.neonDark : ChessBoardTheme.neonLight;
-        break;
-      case BoardThemeType.minimal:
-        ext = isDark ? ChessBoardTheme.minimalDark : ChessBoardTheme.minimalLight;
-        break;
-      case BoardThemeType.classic:
-        ext = Theme.of(context).extension<ChessBoardTheme>() ??
-            (isDark ? ChessBoardTheme.classicDark : ChessBoardTheme.classicLight);
-        break;
-    }
-    return sq.BoardTheme(
-      lightSquare: ext.lightSquareColor,
-      darkSquare: ext.darkSquareColor,
-      check: ext.checkSquareColor,
-      checkmate: Colors.orange,
-      previous: ext.lastMoveDestColor,
-      selected: ext.selectedSquareColor,
-      premove: const Color(0x807B56B3),
-    );
-  }
 
 
 
@@ -220,7 +189,7 @@ class BoardScreen extends ConsumerWidget {
                           state: boardState.squaresState.board,
                           playState: boardState.squaresState.state,
                           pieceSet: sq.PieceSet.merida(),
-                          theme: _getBoardTheme(context, ref),
+                          theme: BoardThemeBuilder.build(context, ref),
                           size: boardState.squaresState.size,
                           moves: boardState.squaresState.moves,
                           markerTheme: legalMovesMarkerTheme,

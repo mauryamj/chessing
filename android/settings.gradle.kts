@@ -1,3 +1,24 @@
+// Compatibility shim for legacy plugins referencing removed jcenter() in Gradle 9+
+try {
+    val registry = groovy.lang.GroovySystem.getMetaClassRegistry()
+    val metaClass = groovy.lang.ExpandoMetaClass(org.gradle.api.artifacts.dsl.RepositoryHandler::class.java, false, true).apply {
+        registerInstanceMethod("jcenter", object : groovy.lang.Closure<Any?>(null) {
+            fun doCall(): Any? {
+                val handler = delegate as org.gradle.api.artifacts.dsl.RepositoryHandler
+                return handler.mavenCentral()
+            }
+            fun doCall(vararg args: Any?): Any? {
+                val handler = delegate as org.gradle.api.artifacts.dsl.RepositoryHandler
+                return handler.mavenCentral()
+            }
+        })
+        initialize()
+    }
+    registry.setMetaClass(org.gradle.api.artifacts.dsl.RepositoryHandler::class.java, metaClass)
+} catch (e: Throwable) {
+    // Ignore if already registered or not supported
+}
+
 pluginManagement {
     val flutterSdkPath =
         run {
@@ -19,8 +40,8 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.11.1" apply false
-    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+    id("com.android.application") version "9.0.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.3.20" apply false
     id("com.google.gms.google-services") version "4.4.2" apply false
 }
 

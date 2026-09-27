@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:squares/squares.dart' as sq;
-import 'package:bishop/bishop.dart' as bishop;
 import 'package:square_bishop/square_bishop.dart';
-import '../../../core/ai/coaching_service.dart';
-import '../../../core/pgn/pgn_parser.dart';
-import '../../../app/theme.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/supabase/repositories/historical_matches_repository.dart';
+import '../../../shared/widgets/board_theme_builder.dart';
 import '../models/historical_match_model.dart';
+import 'historical_match_provider.dart';
 
 part 'historical_match_screen.g.dart';
 
@@ -23,110 +21,15 @@ Future<List<HistoricalMatchModel>> historicalMatches(Ref ref) async {
   return await repo.get();
 }
 
-class HistoricalMatchScreen extends ConsumerStatefulWidget {
+class HistoricalMatchScreen extends ConsumerWidget {
   const HistoricalMatchScreen({super.key});
 
   @override
-  ConsumerState<HistoricalMatchScreen> createState() => _HistoricalMatchScreenState();
-}
-
-class _HistoricalMatchScreenState extends ConsumerState<HistoricalMatchScreen> {
-  String? _selectedGameId;
-  late bishop.Game _game;
-  List<String> _moves = [];
-  int _currentPly = -1; // -1 is starting position
-  String? _commentary;
-  bool _isLoadingCommentary = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _game = bishop.Game(variant: bishop.Variant.standard());
-  }
-
-  void _selectGame(HistoricalMatchModel game) {
-    setState(() {
-      _selectedGameId = game.id;
-      _moves = PgnParser.parseMoves(game.pgn);
-      _currentPly = -1;
-      _game = bishop.Game(variant: bishop.Variant.standard());
-      _commentary = null;
-    });
-  }
-
-  void _loadPly(int ply) {
-    if (ply < -1 || ply >= _moves.length) return;
-    
-    final bp = bishop.Game(variant: bishop.Variant.standard());
-    for (int i = 0; i <= ply; i++) {
-      final move = bp.getMoveSan(_moves[i]);
-      if (move != null) {
-        bp.makeMove(move);
-      } else {
-        break;
-      }
-    }
-    setState(() {
-      _currentPly = ply;
-      _game = bp;
-      _commentary = null;
-    });
-  }
-
-  Future<void> _fetchCommentary(HistoricalMatchModel selectedGame) async {
-    if (_currentPly < 0) return;
-    setState(() {
-      _isLoadingCommentary = true;
-      _commentary = null;
-    });
-
-    try {
-      final coach = ref.read(coachingServiceProvider);
-      // The move played to get to the current state:
-      final moveSan = _moves[_currentPly];
-      final isWhiteMove = _currentPly % 2 == 0;
-      final playerName = isWhiteMove ? selectedGame.whitePlayer : selectedGame.blackPlayer;
-      
-      // Pass the FEN of the state BEFORE the move was played
-      final tempBp = bishop.Game(variant: bishop.Variant.standard());
-      for (int i = 0; i < _currentPly; i++) {
-        final move = tempBp.getMoveSan(_moves[i]);
-        if (move != null) tempBp.makeMove(move);
-      }
-
-      final response = await coach.commentMove(tempBp.fen, moveSan, playerName);
-      setState(() {
-        _commentary = response;
-      });
-    } catch (e) {
-      setState(() {
-        _commentary = "Commentator: Could not load commentary for this move.";
-      });
-    } finally {
-      setState(() {
-        _isLoadingCommentary = false;
-      });
-    }
-  }
-
-  sq.BoardTheme _getBoardTheme(BuildContext context) {
-    final ext = Theme.of(context).extension<ChessBoardTheme>();
-    if (ext == null) return sq.BoardTheme.brown;
-    return sq.BoardTheme(
-      lightSquare: ext.lightSquareColor,
-      darkSquare: ext.darkSquareColor,
-      check: ext.checkSquareColor,
-      checkmate: Colors.orange,
-      previous: ext.lastMoveDestColor,
-      selected: ext.selectedSquareColor,
-      premove: const Color(0x807B56B3),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final matchesAsync = ref.watch(historicalMatchesProvider);
+    final matchState = ref.watch(historicalMatchStateProvider);
+    final notifier = ref.read(historicalMatchStateProvider.notifier);
 
     return matchesAsync.when(
       loading: () => const Scaffold(
@@ -144,20 +47,20 @@ class _HistoricalMatchScreenState extends ConsumerState<HistoricalMatchScreen> {
           );
         }
 
-        // Initialize selection to the first match
-        if (_selectedGameId == null) {
+        // Initialize selection to the first match if unselected
+        if (matchState.selectedGameId == null) {
           final firstGame = matches.first;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _selectGame(firstGame);
+            notifier.selectGame(firstGame);
           });
         }
 
         final selectedGame = matches.firstWhere(
-          (m) => m.id == _selectedGameId,
+          (m) => m.id == matchState.selectedGameId,
           orElse: () => matches.first,
         );
 
-        final squaresState = _game.squaresState(0); // White orientation
+        final squaresState = matchState.game.squaresState(0); // White orientation
 
         return Scaffold(
           appBar: AppBar(
@@ -184,7 +87,7 @@ class _HistoricalMatchScreenState extends ConsumerState<HistoricalMatchScreen> {
                           const SizedBox(height: 8),
                           DropdownButtonFormField<HistoricalMatchModel>(
                             isExpanded: true,
-                            value: selectedGame,
+                            initialValue: selectedGame,
                             items: matches.map((g) {
                               return DropdownMenuItem<HistoricalMatchModel>(
                                 value: g,
@@ -193,7 +96,7 @@ class _HistoricalMatchScreenState extends ConsumerState<HistoricalMatchScreen> {
                             }).toList(),
                             onChanged: (g) {
                               if (g != null) {
-                                _selectGame(g);
+                                notifier.selectGame(g);
                               }
                             },
                             decoration: const InputDecoration(
@@ -211,131 +114,131 @@ class _HistoricalMatchScreenState extends ConsumerState<HistoricalMatchScreen> {
                     child: AspectRatio(
                       aspectRatio: 1.0,
                       child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: sq.Board(
-                            state: squaresState.board,
-                            pieceSet: sq.PieceSet.merida(),
-                            theme: _getBoardTheme(context),
-                            size: squaresState.size,
-                            draggable: false,
-                          ),
-                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: sq.Board(
+                        state: squaresState.board,
+                        pieceSet: sq.PieceSet.merida(),
+                        theme: BoardThemeBuilder.build(context, ref),
+                        size: squaresState.size,
+                        draggable: false,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                ),
+              ),
+              const SizedBox(height: 12),
 
-                  // Ply navigation
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.first_page),
-                        onPressed: _currentPly > -1 ? () => _loadPly(-1) : null,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.chevron_left),
-                        onPressed: _currentPly > -1 ? () => _loadPly(_currentPly - 1) : null,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          _currentPly == -1
-                              ? 'Starting Position'
-                              : 'Move ${(_currentPly + 2) ~/ 2} / ${(_moves.length + 1) ~/ 2}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.chevron_right),
-                        onPressed: _currentPly < _moves.length - 1 ? () => _loadPly(_currentPly + 1) : null,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.last_page),
-                        onPressed: _currentPly < _moves.length - 1 ? () => _loadPly(_moves.length - 1) : null,
-                      ),
-                    ],
+              // Ply navigation
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.first_page),
+                    onPressed: matchState.currentPly > -1 ? () => notifier.loadPly(-1) : null,
                   ),
-                  const SizedBox(height: 12),
-
-                  // Get Commentary Button
-                  ElevatedButton.icon(
-                    onPressed: _currentPly >= 0 && !_isLoadingCommentary ? () => _fetchCommentary(selectedGame) : null,
-                    icon: const Icon(Icons.comment, color: Colors.white),
-                    label: const Text('GET LIVE COMMENTARY', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: matchState.currentPly > -1 ? () => notifier.loadPly(matchState.currentPly - 1) : null,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      matchState.currentPly == -1
+                          ? 'Starting Position'
+                          : 'Move ${(matchState.currentPly + 2) ~/ 2} / ${(matchState.moves.length + 1) ~/ 2}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: matchState.currentPly < matchState.moves.length - 1 ? () => notifier.loadPly(matchState.currentPly + 1) : null,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.last_page),
+                    onPressed: matchState.currentPly < matchState.moves.length - 1 ? () => notifier.loadPly(matchState.moves.length - 1) : null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
-                  // Commentary Box
-                  if (_isLoadingCommentary)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  else if (_commentary != null)
-                    Card(
-                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+              // Get Commentary Button
+              ElevatedButton.icon(
+                onPressed: matchState.currentPly >= 0 && !matchState.isLoadingCommentary ? () => notifier.fetchCommentary(selectedGame) : null,
+                icon: const Icon(Icons.comment, color: Colors.white),
+                label: const Text('GET LIVE COMMENTARY', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Commentary Box
+              if (matchState.isLoadingCommentary)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else if (matchState.commentary != null)
+                Card(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Icon(Icons.mic, color: theme.colorScheme.primary),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Live Commentator',
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
+                            Icon(Icons.mic, color: theme.colorScheme.primary),
+                            const SizedBox(width: 8),
                             Text(
-                              _commentary!,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                height: 1.4,
-                                fontWeight: FontWeight.w500,
+                              'Live Commentator',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          matchState.commentary!,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.4,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                ],
-              ),
-            ),
+                  ),
+                ),
+            ],
           ),
-        );
+        ),
+      ),
+    );
       },
     );
   }

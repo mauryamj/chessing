@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:chessing/app/router.dart';
 import 'package:chessing/core/auth/auth_provider.dart';
 import 'package:chessing/core/auth/auth_state.dart';
@@ -11,7 +10,7 @@ import 'package:chessing/features/play/setup/game_setup_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FakeAuthNotifier extends StateNotifier<AuthStateModel> implements AuthNotifier {
-  FakeAuthNotifier(AuthStateModel state) : super(state);
+  FakeAuthNotifier(super.state);
 
   void setState(AuthStateModel newState) {
     state = newState;
@@ -90,14 +89,14 @@ void main() {
     });
 
     testWidgets('should redirect to GameSetupScreen when logged in authenticated', (tester) async {
-      final mockUser = User(
+      const mockUser = User(
         id: 'test-user-id',
-        appMetadata: const {},
-        userMetadata: const {},
+        appMetadata: {},
+        userMetadata: {},
         aud: 'authenticated',
         createdAt: '2026-06-02T12:00:00Z',
       );
-      final notifier = FakeAuthNotifier(AuthAuthenticated(mockUser));
+      final notifier = FakeAuthNotifier(const AuthAuthenticated(mockUser));
 
       await tester.pumpWidget(
         ProviderScope(

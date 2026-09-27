@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import '../setup/game_setup_provider.dart';
 import '../../settings/settings_provider.dart';
 import 'board_state.dart';
+import '../../../core/utils/chess_move_utils.dart';
 import '../../../core/engine/stockfish_service.dart';
 import '../../../core/engine/rating_service.dart';
 import '../../../core/database/app_database.dart';
@@ -152,7 +153,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
     final bishopMove = _game.bishopMove(move);
     if (bishopMove == null) return false;
     
-    final uci = _moveToUci(bishopMove);
+    final uci = ChessMoveUtils.toUci(_game, bishopMove);
     final san = _game.toSan(bishopMove);
     final isCapture = bishopMove.capture;
 
@@ -293,29 +294,6 @@ class BoardNotifier extends StateNotifier<BoardState> {
       }
     }
     return threatSquares;
-  }
-
-  String _moveToUci(bishop.Move m) {
-    final fromStr = _game.size.squareName(m.from);
-    final toStr = _game.size.squareName(m.to);
-    String promoStr = '';
-    if (m.promotion && m.promoPiece != null) {
-      switch (m.promoPiece) {
-        case 2:
-          promoStr = 'n';
-          break;
-        case 3:
-          promoStr = 'b';
-          break;
-        case 4:
-          promoStr = 'r';
-          break;
-        case 5:
-          promoStr = 'q';
-          break;
-      }
-    }
-    return '$fromStr$toStr$promoStr';
   }
 
   Future<void> _saveGameToDatabase() async {

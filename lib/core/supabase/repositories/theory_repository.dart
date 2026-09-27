@@ -80,15 +80,18 @@ class TheoryRepository with OfflineFirstRepository<TheoryEntry> {
   }
 
   void _pushBookmark(String theoryId, bool value) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
     try {
       if (value) {
         await supabase.from('theory_bookmarks').upsert({
-          'user_id': supabase.auth.currentUser!.id,
+          'user_id': userId,
           'theory_id': theoryId,
         });
       } else {
         await supabase.from('theory_bookmarks').delete()
-            .eq('user_id', supabase.auth.currentUser!.id)
+            .eq('user_id', userId)
             .eq('theory_id', theoryId);
       }
     } catch (e) {
@@ -98,9 +101,10 @@ class TheoryRepository with OfflineFirstRepository<TheoryEntry> {
 
   Future<void> markCompleted(String theoryId) async {
     await _dao.setCompleted(theoryId);
-    if (supabase.auth.currentUser != null) {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId != null) {
       supabase.from('theory_progress').upsert({
-        'user_id': supabase.auth.currentUser!.id,
+        'user_id': userId,
         'theory_id': theoryId,
       }).catchError((e) => debugPrint('Progress sync failed: $e'));
     }

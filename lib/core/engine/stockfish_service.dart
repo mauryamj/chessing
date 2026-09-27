@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:bishop/bishop.dart' as bishop;
 import 'package:stockfish/stockfish.dart' as sf;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/chess_move_utils.dart';
 
 class AnalysisResult {
   final String bestMove;
@@ -264,29 +265,6 @@ class _MockAnalysisArgs {
   _MockAnalysisArgs(this.fen, this.level);
 }
 
-String _moveToUciStatic(bishop.Game game, bishop.Move m) {
-  final fromStr = game.size.squareName(m.from);
-  final toStr = game.size.squareName(m.to);
-  String promoStr = '';
-  if (m.promotion && m.promoPiece != null) {
-    switch (m.promoPiece) {
-      case 2:
-        promoStr = 'n';
-        break;
-      case 3:
-        promoStr = 'b';
-        break;
-      case 4:
-        promoStr = 'r';
-        break;
-      case 5:
-        promoStr = 'q';
-        break;
-    }
-  }
-  return '$fromStr$toStr$promoStr';
-}
-
 Future<String> _runMockSearch(_MockSearchArgs args) async {
   try {
     final game = bishop.Game(variant: bishop.Variant.standard(), fen: args.fen);
@@ -304,12 +282,12 @@ Future<String> _runMockSearch(_MockSearchArgs args) async {
       final result = await engine.search(maxDepth: searchDepth, timeLimit: 800);
       final move = result.move;
       if (move != null) {
-        return _moveToUciStatic(game, move);
+        return ChessMoveUtils.toUci(game, move);
       }
     }
 
     final randomMove = moves[Random().nextInt(moves.length)];
-    return _moveToUciStatic(game, randomMove);
+    return ChessMoveUtils.toUci(game, randomMove);
   } catch (e) {
     return '';
   }
@@ -334,7 +312,7 @@ Future<AnalysisResult> _runMockAnalysis(_MockAnalysisArgs args) async {
     final result = await engine.search(maxDepth: searchDepth, timeLimit: 300);
     
     final move = result.move;
-    final bestMove = move != null ? _moveToUciStatic(game, move) : '';
+    final bestMove = move != null ? ChessMoveUtils.toUci(game, move) : '';
     final eval = result.eval ?? game.evaluate(game.turn);
 
     return AnalysisResult(bestMove: bestMove, eval: eval);
