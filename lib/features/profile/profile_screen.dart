@@ -348,26 +348,28 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final cardColor = theme.cardTheme.color ?? cs.surfaceContainerHighest;
 
     return Semantics(
       label: 'Open settings',
       button: true,
-      child: InkWell(
-        onTap: () => context.push('/settings'),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: theme.cardTheme.color ?? cs.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: cs.shadow.withValues(alpha: 0.06),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: cs.shadow.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
           child: ListTile(
+            onTap: () => context.push('/settings'),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             leading: Container(

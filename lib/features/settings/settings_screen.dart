@@ -315,10 +315,10 @@ class _SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final cardColor = theme.cardTheme.color ?? cs.surfaceContainerHighest;
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.cardTheme.color ?? cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -328,8 +328,13 @@ class _SettingsCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: children,
+      child: Material(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: children,
+        ),
       ),
     );
   }

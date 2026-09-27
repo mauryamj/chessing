@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,9 +22,21 @@ Future<void> _safeLoadDotenv() async {
 
 Future<void> _safeInitFirebase() async {
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      // On Android, google-services.json automatically initializes the native [DEFAULT] app.
+      // Calling initializeApp() without options attaches to the native [DEFAULT] instance.
+      await Firebase.initializeApp();
+    } else {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } on FirebaseException catch (e) {
+    if (e.code == 'duplicate-app') {
+      debugPrint('Firebase already initialized: ${e.message}');
+    } else {
+      debugPrint('Failed to initialize Firebase: $e');
+    }
   } catch (e) {
     debugPrint('Failed to initialize Firebase: $e');
   }

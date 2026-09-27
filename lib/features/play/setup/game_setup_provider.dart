@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum GameMode { timed, free, level }
 
@@ -29,6 +30,20 @@ class GameConfig {
     required this.botLevel,
     required this.playerColor,
   });
+
+  String get summary {
+    final colorStr = playerColor == PlayerColor.white
+        ? 'White'
+        : (playerColor == PlayerColor.black ? 'Black' : 'Random');
+    switch (mode) {
+      case GameMode.timed:
+        return '${timeControl.label} • $colorStr';
+      case GameMode.level:
+        return 'Bot Level $botLevel • $colorStr';
+      case GameMode.free:
+        return 'Free Play • $colorStr';
+    }
+  }
 
   GameConfig copyWith({
     GameMode? mode,
@@ -81,28 +96,89 @@ class GameConfig {
 }
 
 class GameConfigNotifier extends StateNotifier<GameConfig> {
+  static const _kMode = 'game_config_mode';
+  static const _kTimeControl = 'game_config_time_control';
+  static const _kBotLevel = 'game_config_bot_level';
+  static const _kPlayerColor = 'game_config_player_color';
+
   GameConfigNotifier()
       : super(GameConfig(
           mode: GameMode.level,
           timeControl: TimeControl.blitz5_0,
           botLevel: 3,
           playerColor: PlayerColor.white,
-        ));
+        )) {
+    _loadFromPrefs();
+  }
+
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final modeStr = prefs.getString(_kMode);
+      final tcStr = prefs.getString(_kTimeControl);
+      final botLevel = prefs.getInt(_kBotLevel);
+      final colorStr = prefs.getString(_kPlayerColor);
+
+      GameMode mode = state.mode;
+      if (modeStr != null) {
+        mode = GameMode.values.firstWhere(
+          (e) => e.name == modeStr,
+          orElse: () => mode,
+        );
+      }
+      TimeControl tc = state.timeControl;
+      if (tcStr != null) {
+        tc = TimeControl.values.firstWhere(
+          (e) => e.name == tcStr,
+          orElse: () => tc,
+        );
+      }
+      final level = botLevel ?? state.botLevel;
+      PlayerColor color = state.playerColor;
+      if (colorStr != null) {
+        color = PlayerColor.values.firstWhere(
+          (e) => e.name == colorStr,
+          orElse: () => color,
+        );
+      }
+
+      state = GameConfig(
+        mode: mode,
+        timeControl: tc,
+        botLevel: level,
+        playerColor: color,
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _saveToPrefs(GameConfig config) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kMode, config.mode.name);
+      await prefs.setString(_kTimeControl, config.timeControl.name);
+      await prefs.setInt(_kBotLevel, config.botLevel);
+      await prefs.setString(_kPlayerColor, config.playerColor.name);
+    } catch (_) {}
+  }
 
   void setMode(GameMode mode) {
     state = state.copyWith(mode: mode);
+    _saveToPrefs(state);
   }
 
   void setTimeControl(TimeControl timeControl) {
     state = state.copyWith(timeControl: timeControl);
+    _saveToPrefs(state);
   }
 
   void setBotLevel(int botLevel) {
     state = state.copyWith(botLevel: botLevel);
+    _saveToPrefs(state);
   }
 
   void setPlayerColor(PlayerColor color) {
     state = state.copyWith(playerColor: color);
+    _saveToPrefs(state);
   }
 }
 
