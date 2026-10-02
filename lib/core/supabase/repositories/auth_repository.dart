@@ -18,13 +18,10 @@ class AuthRepository {
   }
 
   Future<void> deleteAccount() async {
-    try {
-      // Call a Supabase Edge Function that deletes auth.users row
-      await supabase.functions.invoke('delete-account');
-    } catch (_) {
-      // Fallback: delete client session if Edge Function doesn't exist
-      await signOut();
-    }
+    // Invoke the Edge Function that removes the auth.users row server-side.
+    // Throws if the function fails — callers must handle this explicitly.
+    await supabase.functions.invoke('delete-account');
+    await signOut();
   }
 
   User? get currentUser => supabase.auth.currentUser;

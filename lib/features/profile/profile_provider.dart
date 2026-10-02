@@ -38,9 +38,12 @@ class ProfileNotifier extends StateNotifier<AsyncValue<ProfileData?>> {
   Future<void> updateUsername(String name) async {
     final current = state.value;
     if (current == null) return;
+    // Strip disallowed characters and enforce max length as defense-in-depth
+    final sanitized = name.trim().replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '');
+    final clamped = sanitized.isEmpty ? 'Player' : sanitized.substring(0, sanitized.length.clamp(0, 30));
     await _db.upsertProfile(ProfileCompanion(
       id: Value(current.id),
-      username: Value(name.trim().isEmpty ? 'Player' : name.trim()),
+      username: Value(clamped),
     ));
     await _load();
   }

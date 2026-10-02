@@ -117,7 +117,15 @@ class FcmService {
   }
 
   void _handleNotificationData(Map<String, dynamic> data) {
-    debugPrint('Notification tapped with data: $data');
+    // Validate expected keys/types before any routing logic is added here.
+    // This prevents tampered or malformed payloads from triggering unintended behaviour.
+    final type = data['type'];
+    if (type is String && const {'game_invite', 'achievement', 'daily_reminder'}.contains(type)) {
+      debugPrint('Notification tapped: type=$type');
+      // TODO: Add navigation/action logic here keyed on validated `type`
+    } else {
+      debugPrint('Notification received with unknown or missing type — ignoring payload.');
+    }
   }
 
   Future<void> deleteToken() async {

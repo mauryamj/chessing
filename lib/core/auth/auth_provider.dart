@@ -86,11 +86,11 @@ class AuthNotifier extends StateNotifier<AuthStateModel> {
 
       // State is auto-updated by the auth change listener
     } on AuthException catch (e) {
-      state = AuthError('Supabase auth error: ${e.message}');
       debugPrint('Supabase AuthException: ${e.message} | status: ${e.statusCode}');
+      state = const AuthError('Sign-in failed. Please try again.');
     } catch (e, stack) {
-      state = AuthError(e.toString());
       debugPrint('Sign-in error: $e\n$stack');
+      state = const AuthError('Sign-in failed. Please try again.');
     }
   }
 
@@ -122,7 +122,13 @@ class AuthNotifier extends StateNotifier<AuthStateModel> {
     } catch (_) {}
     try {
       await _authRepo.deleteAccount();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Account deletion failed: $e');
+      state = const AuthError(
+        'Account deletion failed. Please try again or contact support.',
+      );
+      return;
+    }
     state = const AuthUnauthenticated();
   }
 

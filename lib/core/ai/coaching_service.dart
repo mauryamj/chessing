@@ -35,7 +35,7 @@ class CoachingService {
     try {
       final dio = Dio();
       final response = await dio.post(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$trimmed',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
         data: {
           'contents': [
             {
@@ -49,6 +49,9 @@ class CoachingService {
           }
         },
         options: Options(
+          headers: {
+            'x-goog-api-key': trimmed,
+          },
           sendTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
         ),
@@ -78,7 +81,7 @@ class CoachingService {
 
     try {
       final response = await _dio.post(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
         data: {
           'contents': [
             {
@@ -100,6 +103,7 @@ class CoachingService {
         options: Options(
           headers: {
             'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
           },
           sendTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 20),

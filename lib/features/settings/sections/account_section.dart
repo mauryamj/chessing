@@ -26,8 +26,30 @@ class AccountSection extends ConsumerWidget {
       if (!context.mounted) return;
 
       final file = File(image.path);
+
+      // Guard: reject files larger than 5 MB
+      final fileSize = await file.length();
+      if (fileSize > 5 * 1024 * 1024) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image must be smaller than 5 MB.')),
+        );
+        return;
+      }
+
+      // Guard: allow only recognised image extensions
+      final ext = image.path.split('.').last.toLowerCase();
+      if (!{'jpg', 'jpeg', 'png', 'webp'}.contains(ext)) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Only JPG, PNG, or WebP images are allowed.')),
+        );
+        return;
+      }
+
       final repo = ProfileRepository(ref.read(cacheServiceProvider));
-      
+
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading avatar...')),
       );
@@ -52,14 +74,17 @@ class AccountSection extends ConsumerWidget {
 
   void _showEditUsernameDialog(BuildContext context, WidgetRef ref, String currentName, String userId) {
     final controller = TextEditingController(text: currentName);
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9_]{1,30}$');
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Edit Username'),
         content: TextField(
           controller: controller,
+          maxLength: 30,
           decoration: const InputDecoration(
             hintText: 'Enter username',
+            helperText: 'Letters, numbers, and underscores only',
             border: OutlineInputBorder(),
           ),
           autofocus: true,
@@ -72,10 +97,19 @@ class AccountSection extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               final newName = controller.text.trim();
-              if (newName.isNotEmpty) {
+              if (newName.isNotEmpty && usernameRegex.hasMatch(newName)) {
                 await ProfileRepository(ref.read(cacheServiceProvider)).updateProfile(username: newName);
                 ref.invalidate(profileProvider);
                 ref.read(profileNotifierProvider.notifier).updateUsername(newName);
+              } else if (newName.isNotEmpty) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('Username must be 1–30 characters: letters, numbers, or underscores only.'),
+                    ),
+                  );
+                }
+                return;
               }
               if (ctx.mounted) Navigator.pop(ctx);
             },
