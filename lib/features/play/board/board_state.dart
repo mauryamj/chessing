@@ -35,7 +35,10 @@ class BoardState {
   final int? savedLocalGameId;
 
   bool get isGameOver => status != GameStatus.playing;
-  bool get wasDefeat => status == GameStatus.resigned || status == GameStatus.timeout;
+  bool get wasDefeat =>
+      status == GameStatus.resigned ||
+      status == GameStatus.timeout ||
+      (status == GameStatus.checkmate && isPlayerTurn);
 
   BoardState copyWith({
     String? fen,

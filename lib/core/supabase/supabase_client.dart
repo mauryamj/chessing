@@ -7,8 +7,25 @@ Future<void> initSupabase() async {
   
   await Supabase.initialize(
     url: url,
+    // ignore: deprecated_member_use
     anonKey: anonKey,
   );
+}
+
+bool get isSupabaseInitialized {
+  try {
+    return Supabase.instance.isInitialized;
+  } catch (_) {
+    return false;
+  }
+}
+
+SupabaseClient? get safeSupabase {
+  try {
+    return Supabase.instance.client;
+  } catch (_) {
+    return null;
+  }
 }
 
 SupabaseClient get supabase => Supabase.instance.client;

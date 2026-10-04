@@ -375,7 +375,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
       // Supabase syncing hook
       try {
         final profileDataAfter = await db.getProfile();
-        final remoteUser = supabase.auth.currentUser;
+        final remoteUser = safeSupabase?.auth.currentUser;
         if (remoteUser != null && profileDataAfter != null) {
           // Update profile stats remotely
           await ProfileRepository(ref.read(cacheServiceProvider)).updateStats(
