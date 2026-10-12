@@ -1,0 +1,65 @@
+name: Build Android APK
+
+on:
+  # Trigger: Allows the workflow to be manually run on demand from GitHub Actions.
+  workflow_dispatch:
+    inputs:
+      # Input: Dropdown selection to choose between architecture-specific split APKs or a universal fat APK.
+      build_type:
+        description: 'Select APK build type'
+        required: true
+        default: 'split-apk'
+        type: choice
+        options:
+          - split-apk
+          - fat-apk
+
+jobs:
+  # Job: Runs the full CI/CD pipeline on an Ubuntu virtual machine to test and build the APK.
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step: Checks out the latest repository source code to the runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step: Configures Java 17 OpenJDK environment required by Android Gradle Plugin.
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      # Step: Installs the stable Flutter SDK with tool and artifact caching enabled.
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      # Step: Fetches and installs all project dependencies declared in pubspec.yaml.
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Step: Executes all unit and widget tests to verify code stability before compilation.
+      - name: Run tests
+        run: flutter test
+
+      # Step: Builds the release APK using the selected optimization and packaging strategy.
+      - name: Build APK
+        run: |
+          if [ "${{ github.event.inputs.build_type }}" = "split-apk" ]; then
+            flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/symbols
+          else
+            flutter build apk --release
+          fi
+
+      # Step: Archives and uploads all generated APKs from the build output directory as an artifact.
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess-trainer-${{ github.event.inputs.build_type }}
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
