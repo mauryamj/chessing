@@ -58,12 +58,8 @@ app.*.map.json
 secrets.dart
 secrets.yaml
 
-# Firebase & Google Services
-google-services.json
-GoogleService-Info.plist
-lib/firebase_options.dart
+# Firebase & Google Services (un-ignored so CI/GitHub Actions can build the APK)
 firebase_app_id_file.json
-**/firebase_options.dart
 
 # Android keystore & signing
 *.keystore
