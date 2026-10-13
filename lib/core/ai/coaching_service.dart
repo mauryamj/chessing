@@ -1,6 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/settings/settings_provider.dart';
 import 'prompts.dart';
@@ -21,11 +20,7 @@ class CoachingService {
     if (custom != null && custom.trim().isNotEmpty) {
       return custom.trim();
     }
-    final envKey = dotenv.env['GEMINI_API_KEY'];
-    if (envKey != null && envKey.trim().isNotEmpty) {
-      return envKey.trim();
-    }
-    return const String.fromEnvironment('GEMINI_API_KEY');
+    return '';
   }
 
   /// Tests a Gemini API key by making a minimal generateContent request.

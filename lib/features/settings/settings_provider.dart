@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/firebase/fcm_service.dart';
+import '../../core/storage/secure_storage.dart';
 
 enum BoardThemeType { classic, wood, neon, minimal }
 
@@ -141,7 +142,6 @@ const _kDailyReminderEnabled = 'settings_daily_reminder_enabled';
 const _kDailyReminderHour = 'settings_daily_reminder_hour';
 const _kDailyReminderMinute = 'settings_daily_reminder_minute';
 const _kAchievementNotifications = 'settings_achievement_notifications';
-const _kGeminiApiKey = 'settings_gemini_api_key';
 
 class SettingsNotifier extends AsyncNotifier<AppSettings> {
   late SharedPreferences _prefs;
@@ -149,10 +149,19 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   @override
   Future<AppSettings> build() async {
     _prefs = await SharedPreferences.getInstance();
+
+    // Migrate: if key exists in SharedPreferences, move to secure storage
+    const legacyKeyName = 'settings_gemini_api_key';
+    final legacyKey = _prefs.getString(legacyKeyName);
+    if (legacyKey != null && legacyKey.isNotEmpty) {
+      await SecureStorage.setGeminiApiKey(legacyKey);
+      await _prefs.remove(legacyKeyName);
+    }
+
     return _load();
   }
 
-  AppSettings _load() {
+  Future<AppSettings> _load() async {
     final themeModeIndex = _prefs.getInt(_kThemeMode) ?? ThemeMode.system.index;
     final boardThemeIndex = _prefs.getInt(_kBoardTheme) ?? 0;
     final pieceSetIndex = _prefs.getInt(_kPieceSet) ?? 0;
@@ -167,7 +176,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     final dailyHour = _prefs.getInt(_kDailyReminderHour) ?? 20;
     final dailyMin = _prefs.getInt(_kDailyReminderMinute) ?? 0;
     final achievements = _prefs.getBool(_kAchievementNotifications) ?? true;
-    final geminiKey = _prefs.getString(_kGeminiApiKey) ?? '';
+    final geminiKey = await SecureStorage.getGeminiApiKey() ?? '';
 
     return AppSettings(
       themeMode: ThemeMode.values[themeModeIndex],
@@ -276,7 +285,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
 
   Future<void> setGeminiApiKey(String key) async {
     final trimmed = key.trim();
-    await _prefs.setString(_kGeminiApiKey, trimmed);
+    await SecureStorage.setGeminiApiKey(trimmed);
     state = state.whenData((s) => s.copyWith(geminiApiKey: trimmed));
   }
 }

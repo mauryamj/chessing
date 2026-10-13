@@ -23,7 +23,7 @@ class LoginScreen extends ConsumerWidget {
             backgroundColor: cs.error,
           ),
         );
-      } else if (next is AuthAuthenticated || next is AuthGuest) {
+      } else if (next is AuthAuthenticated) {
         // Auto routing handled by router redirect, but let's make sure it refreshes
         context.go('/setup');
       }
@@ -120,27 +120,12 @@ class LoginScreen extends ConsumerWidget {
                               child: CircularProgressIndicator(),
                             ),
                           )
-                        else ...[
+                        else
                           GoogleSignInButton(
                             onPressed: () {
                               ref.read(authNotifierProvider.notifier).signInWithGoogle();
                             },
                           ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () {
-                              ref.read(authNotifierProvider.notifier).signInAsGuest();
-                            },
-                            child: Text(
-                              'Play as Guest',
-                              style: TextStyle(
-                                color: cs.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),

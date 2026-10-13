@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +15,15 @@ import 'features/settings/settings_provider.dart';
 
 Future<void> _safeLoadDotenv() async {
   try {
-    await dotenv.load(fileName: '.env');
+    if (!kIsWeb) {
+      final envFile = File('.env');
+      if (await envFile.exists()) {
+        final content = await envFile.readAsString();
+        dotenv.testLoad(fileInput: content);
+        return;
+      }
+    }
+    await dotenv.load(fileName: '.env', isOptional: true);
   } catch (e) {
     debugPrint('Failed to load .env file: $e');
   }
@@ -82,10 +91,12 @@ class _MainAppState extends ConsumerState<MainApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Initialize FCM and Sync on startup if user is logged in
       try {
-        final user = supabase.auth.currentUser;
-        if (user != null) {
-          await FcmService().initialize();
-          await ref.read(syncServiceProvider).retryPendingSync();
+        if (isSupabaseInitialized) {
+          final user = supabase.auth.currentUser;
+          if (user != null) {
+            await FcmService().initialize();
+            await ref.read(syncServiceProvider).retryPendingSync();
+          }
         }
       } catch (e) {
         debugPrint('Startup sync/FCM failed: $e');

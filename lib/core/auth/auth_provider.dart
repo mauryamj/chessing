@@ -41,9 +41,16 @@ class AuthNotifier extends StateNotifier<AuthStateModel> {
   Future<void> signInWithGoogle() async {
     state = const AuthLoading();
     try {
-      final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'] ?? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+      const defaultWebClientId =
+          '270105926493-eg0db58im8t2pq59f9njcu2qkuifo4gf.apps.googleusercontent.com';
+      var webClientId = (dotenv.isInitialized ? dotenv.maybeGet('GOOGLE_WEB_CLIENT_ID') : null) ??
+          const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+      if (webClientId.isEmpty || webClientId.contains('your-google-web-client-id')) {
+        webClientId = defaultWebClientId;
+      }
+
       final googleSignIn = GoogleSignIn(
-        clientId: webClientId,
+        clientId: kIsWeb ? webClientId : null,
         serverClientId: webClientId,
         scopes: ['email', 'profile'],
       );

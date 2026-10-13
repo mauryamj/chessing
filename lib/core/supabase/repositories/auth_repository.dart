@@ -6,6 +6,7 @@ class AuthRepository {
     required String idToken,
     required String accessToken,
   }) async {
+    if (!isSupabaseInitialized) return;
     await supabase.auth.signInWithIdToken(
       provider: OAuthProvider.google,
       idToken: idToken,
@@ -14,18 +15,22 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    if (!isSupabaseInitialized) return;
     await supabase.auth.signOut();
   }
 
   Future<void> deleteAccount() async {
+    if (!isSupabaseInitialized) return;
     // Invoke the Edge Function that removes the auth.users row server-side.
     // Throws if the function fails — callers must handle this explicitly.
     await supabase.functions.invoke('delete-account');
     await signOut();
   }
 
-  User? get currentUser => supabase.auth.currentUser;
+  User? get currentUser =>
+      isSupabaseInitialized ? supabase.auth.currentUser : null;
 
-  Stream<AuthState> get authStateChanges =>
-      supabase.auth.onAuthStateChange;
+  Stream<AuthState> get authStateChanges => isSupabaseInitialized
+      ? supabase.auth.onAuthStateChange
+      : const Stream.empty();
 }
